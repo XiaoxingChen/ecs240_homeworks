@@ -36,27 +36,42 @@ def dominators(cfg, reverse=False):
         successors = cfg.predecessors
         predecessors = cfg.successors
 
-    print("[WARNING]: [todo] BFS once cannot ensure the convergence of dominator calculation!")
+    #print("[WARNING]: [todo] BFS once cannot ensure the convergence of dominator calculation!")
 
     # BFS 
-    dom = {k: set(cfg.nodes) for k in cfg.nodes}
-    fifo = [root]
-    not_visited = set(cfg.nodes)
-    while len(fifo) > 0:
-        node = fifo[0]
-        if node not in not_visited:
-            fifo.pop(0)
-            continue
-        # print(node)
-        intersect = set(cfg.nodes) if node != root else set()
-        for predecessor in predecessors[node]:
-            intersect.intersection_update(dom[predecessor])
+    # dom = {k: set(cfg.nodes) for k in cfg.nodes}
+    # fifo = [root]
+    # not_visited = set(cfg.nodes)
+    # while len(fifo) > 0:
+    #     node = fifo[0]
+    #     if node not in not_visited:
+    #         fifo.pop(0)
+    #         continue
+    #     # print(node)
+    #     intersect = set(cfg.nodes) if node != root else set()
+    #     for predecessor in predecessors[node]:
+    #         intersect.intersection_update(dom[predecessor])
     
-        dom[node] = intersect.union(set([node]))
-        not_visited.remove(node)
-        fifo.pop(0)
-        fifo += list(successors[node])
-        
+    #     dom[node] = intersect.union(set([node]))
+    #     not_visited.remove(node)
+    #     fifo.pop(0)
+    #     fifo += list(successors[node])
+    
+    # Iterative Dominator Algorithm
+    dom = {k: set(cfg.nodes) for k in cfg.nodes}
+    changed = True
+    while(changed):
+        changed = False
+        #TODO: cfg.node could be replaced by reverse post-order nodes
+        for node in cfg.nodes:
+            intersect = set(cfg.nodes) if node != root else set()
+            for predecessor in predecessors[node]:
+                intersect.intersection_update(dom[predecessor])
+            new_set = intersect.union(set([node]))
+            if new_set != dom[node]:
+                changed = True
+                dom[node] = new_set
+    print(dom)
     return dom
 
 def immediateDominator(dominators_in):
