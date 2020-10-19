@@ -36,8 +36,6 @@ def dominators(cfg, reverse=False):
         successors = cfg.predecessors
         predecessors = cfg.successors
 
-    #print("[WARNING]: [todo] BFS once cannot ensure the convergence of dominator calculation!")
-
     # BFS 
     # dom = {k: set(cfg.nodes) for k in cfg.nodes}
     # fifo = [root]
@@ -57,12 +55,12 @@ def dominators(cfg, reverse=False):
     #     fifo.pop(0)
     #     fifo += list(successors[node])
     
-    # Iterative Dominator Algorithm
+
+    """Iterative Dominator Algorithm"""
     dom = {k: set(cfg.nodes) for k in cfg.nodes}
     changed = True
     while(changed):
         changed = False
-        #TODO: cfg.node could be replaced by reverse post-order nodes
         for node in cfg.nodes:
             intersect = set(cfg.nodes) if node != root else set()
             for predecessor in predecessors[node]:
@@ -71,8 +69,29 @@ def dominators(cfg, reverse=False):
             if new_set != dom[node]:
                 changed = True
                 dom[node] = new_set
-    print(dom)
+
     return dom
+
+
+def reversePostOrder(cfg):
+    """return a list of cfg.nodes in reverse post-order"""
+    path, RPO = list(), list()
+    visited = set()
+    path.append(cfg.entry_node)
+    while len(path) > 0:   
+        node = path[-1]
+        visited.add(node)
+        if cfg.successors[node] - visited == set():
+            RPO.append(node)
+            path.pop()
+        else:
+            for succ_node in cfg.successors[node]:
+                if succ_node not in RPO and succ_node not in path:
+                    node = succ_node
+                    path.append(node)
+                    break
+    
+    return RPO[::-1]
 
 def immediateDominator(dominators_in):
     idom = {}
