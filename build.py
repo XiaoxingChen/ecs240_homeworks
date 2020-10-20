@@ -18,6 +18,7 @@ solution_files = {'pa1-handout': ['build.sh', 'main.py', 'run.sh']}
 
 class BuildDirectory():
     def __init__(self, target_folder_name):
+        self.target_basename = target_folder_name
         self.script_folder = os.path.abspath(os.path.dirname(__file__))
         self.build_root = os.path.join(self.script_folder, 'build')
         self.assignment_folder = os.path.join(self.script_folder, target_folder_name)
@@ -25,15 +26,18 @@ class BuildDirectory():
         self.assignment_test_script = os.path.join(self.assignment_folder, 'test_main.py')
     
 
-def runBuild(dirs, target_folder):
+def runBuild(dirs):
     os.makedirs(dirs.build_root, exist_ok=True)
     with ZipFile(dirs.output_zip_name, 'w') as f:
         f.write(os.path.join(dirs.script_folder, 'team.txt'), 'team.txt')
-        for filename in solution_files[target_folder]:
+        for filename in solution_files[dirs.target_basename]:
             f.write(os.path.join(dirs.assignment_folder, filename), filename)
 
-def runTest(dirs, target_folder):
+def runTest(dirs):
     print("Run test cases...")
+    exit_code = os.system("python3 {}".format(dirs.assignment_test_script))
+    if(exit_code != 0):
+        raise RuntimeError('unit test failed')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -51,8 +55,8 @@ if __name__ == "__main__":
         quit()
 
     
-    runBuild(dirs, target_folder)
+    runBuild(dirs)
     if args.test:
-        runTest(dirs, target_folder)
+        runTest(dirs)
 
     
