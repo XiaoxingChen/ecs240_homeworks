@@ -128,15 +128,10 @@ def findControlNodes(cfg, reverse=False):
         
     return control_nodes
     
-def getControlDependence(cfg, idom):
-    #reverse the cfg
-    root = cfg.exit_node
-    successors = cfg.predecessors
-    predecessors = cfg.successors
-
-    #get the buttom-up traversal of the dominator tree(reverse-BFS)
-    #also record the child of the dominator tree
-    #TODO: no idea whether buttom-up traversal is reverse BFS
+def buttomUpTraverse(root, idom):
+    """Get the buttom-up traversal of the dominator tree(reverse-BFS)
+    Also record the child of the dominator tree
+    TODO: no idea whether buttom-up traversal is reverse BFS"""
     traverseOrder = []
     traverseOrder.append(root)
     index = 0
@@ -150,11 +145,21 @@ def getControlDependence(cfg, idom):
                 traverseOrder.append(node)
                 child[cur].add(node)
         index += 1
-    # traverseOrder = traverseOrder[::-1]
+
+    return (traverseOrder[::-1], child)
+
+def getControlDependence(cfg, idom):
+    #reverse the cfg
+    root = cfg.exit_node
+    successors = cfg.predecessors
+    predecessors = cfg.successors
+
+    #get the traverse order and record children in dominator tree
+    traverseOrder, child = buttomUpTraverse(root, idom)
 
     #reverse dominance frontier(RDF)
     RDF = {}
-    for x in traverseOrder[::-1]:
+    for x in traverseOrder:
         RDF[x] = set()
         
         #DF-local
