@@ -23,6 +23,20 @@ class ControlFlowGraph:
         self.nodes.add(from_node)
         self.nodes.add(to_node)
 
+    @staticmethod
+    def fromEdgeList(entry_node, exit_node, edge_list, reverse=False):
+        node_num = len(set([node for edge in edge_list for node in edge ]))
+        if not reverse:
+            cfg = ControlFlowGraph(node_num, entry_node, exit_node)
+            for e in edge_list:
+                cfg.addEdge(e[0], e[1])
+        else:
+            cfg = ControlFlowGraph(node_num, exit_node, entry_node)
+            for e in edge_list:
+                cfg.addEdge(e[1], e[0])
+                
+        return cfg
+
 
 def dominators(cfg, reverse=False):
     """Iterative Dominator Algorithm"""
