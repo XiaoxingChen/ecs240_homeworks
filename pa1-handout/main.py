@@ -25,8 +25,7 @@ class ControlFlowGraph:
 
 
 def dominators(cfg, reverse=False):
-    # """
-    # """
+    """Iterative Dominator Algorithm"""
     if not reverse:
         root = cfg.entry_node
         successors = cfg.successors
@@ -36,27 +35,6 @@ def dominators(cfg, reverse=False):
         successors = cfg.predecessors
         predecessors = cfg.successors
 
-    # BFS 
-    # dom = {k: set(cfg.nodes) for k in cfg.nodes}
-    # fifo = [root]
-    # not_visited = set(cfg.nodes)
-    # while len(fifo) > 0:
-    #     node = fifo[0]
-    #     if node not in not_visited:
-    #         fifo.pop(0)
-    #         continue
-    #     # print(node)
-    #     intersect = set(cfg.nodes) if node != root else set()
-    #     for predecessor in predecessors[node]:
-    #         intersect.intersection_update(dom[predecessor])
-    
-    #     dom[node] = intersect.union(set([node]))
-    #     not_visited.remove(node)
-    #     fifo.pop(0)
-    #     fifo += list(successors[node])
-    
-
-    """Iterative Dominator Algorithm"""
     dom = {k: set(cfg.nodes) for k in cfg.nodes}
     changed = True
     while(changed):
@@ -71,7 +49,6 @@ def dominators(cfg, reverse=False):
                 dom[node] = new_set
 
     return dom
-
 
 def reversePostOrder(cfg):
     """return a list of cfg.nodes in reverse post-order"""
@@ -151,6 +128,55 @@ def findControlNodes(cfg, reverse=False):
         
     return control_nodes
     
+def getControlDependence(cfg, idom):
+    #reverse the cfg
+    root = cfg.exit_node
+    successors = cfg.predecessors
+    predecessors = cfg.successors
+
+    #get the buttom-up traversal of the dominator tree(reverse-BFS)
+    #also record the child of the dominator tree
+    #TODO: no idea whether buttom-up traversal is reverse BFS
+    traverseOrder = []
+    traverseOrder.append(root)
+    index = 0
+    child = {root: set()}
+    while index != len(cfg.nodes):
+        cur = traverseOrder[index]
+        if cur not in child.keys():
+            child[cur] = set()
+        for node in cfg.nodes:
+            if idom[node] == cur and node not in traverseOrder:
+                traverseOrder.append(node)
+                child[cur].add(node)
+        index += 1
+    # traverseOrder = traverseOrder[::-1]
+
+    #reverse dominance frontier(RDF)
+    RDF = {}
+    for x in traverseOrder[::-1]:
+        RDF[x] = set()
+        
+        #DF-local
+        for y in successors[x]:
+            if idom[y] != x:
+                RDF[x].add(y)
+
+        #DF-up
+        for z in child[x]:
+            for y in RDF[z]:
+                if idom[y] != x:
+                    RDF[x].add(y)
+
+    #RDF to CD
+    CD = {}
+    for x in cfg.nodes:
+        CD[x] = set()
+    for y in cfg.nodes:
+        for x in RDF[y]:
+            CD[x].add(y)
+    
+    return CD
 
 def parseInputFile(filename):
     cfg = None
@@ -187,8 +213,9 @@ if __name__ == "__main__":
     input_filename, output_filename = [os.path.join(os.path.realpath(p)) for p in sys.argv[1:3]]
     cfg = parseInputFile(input_filename)
     dom = dominators(cfg)
+    dom_inverse = dominators(cfg, True)
     idom = immediateDominator(dom)
-    cd = findControlNodes(cfg)
-    outputToFile(output_filename, idom, cd)
-    
-    
+    idom_inverse = immediateDominator(dom_inverse)
+    CD = getControlDependence(cfg, idom_inverse)
+    #cd = findControlNodes(cfg)
+    outputToFile(output_filename, idom, CD)
