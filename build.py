@@ -39,11 +39,27 @@ def runTest(dirs):
     if(exit_code != 0):
         raise RuntimeError('unit test failed')
 
+def runTestOnCSIF(dirs):
+    csif_host_name = 'pc22.cs.ucdavis.edu'
+    csif_user_name = input("Input your csif username: ")
+    shell_cmds = [
+    'rm -rf ecs240_homeworks',
+    'git clone git@github.com:XiaoxingChen/ecs240_homeworks.git', 
+    'cd ecs240_homeworks', 
+    './build.py --test {}'.format(dirs.target_basename), 'exit']
+    shell_cmd = '&&'.join(shell_cmds)
+    ssh_cmd = 'ssh {}@{} "{}"'.format(csif_user_name, csif_host_name, shell_cmd)
+    exit_code = os.system(ssh_cmd)
+    if(exit_code != 0):
+        raise RuntimeError('unit test failed')
+    
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--clean', action='store_true', help='Clean build folder')
     parser.add_argument('target_folder', nargs=1, help="Name of the target homework folder")
     parser.add_argument('--test', action='store_true', help='Run test cases')
+    parser.add_argument('--test-on-csif', action='store_true', help='Run test cases on csif')
     args = parser.parse_args()
 
     target_folder = os.path.normpath(args.target_folder[0])
@@ -59,4 +75,6 @@ if __name__ == "__main__":
     if args.test:
         runTest(dirs)
 
+    if args.test_on_csif:
+        runTestOnCSIF(dirs)
     
