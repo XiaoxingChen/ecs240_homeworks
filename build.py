@@ -14,7 +14,15 @@ def handleAutoComplete():
     else:
         pass
 
-solution_files = {'pa1-handout': ['build.sh', 'main.py', 'run.sh']}
+solution_files = {
+    'pa1-handout': ['build.sh', 'main.py', 'run.sh'],
+    'pa2-handout': [ 
+        os.path.join('andersen', 'build.sh'), 
+        os.path.join('andersen', 'main.py'), 
+        os.path.join('andersen', 'run.sh'),
+        os.path.join('typed', 'build.sh'), 
+        os.path.join('typed', 'main.py'), 
+        os.path.join('typed', 'run.sh')]}
 
 class BuildDirectory():
     def __init__(self, target_folder_name):
@@ -26,12 +34,13 @@ class BuildDirectory():
         self.assignment_test_script = os.path.join(self.assignment_folder, 'test_main.py')
     
 
-def runBuild(dirs):
+def runCompress(dirs):
     os.makedirs(dirs.build_root, exist_ok=True)
     with ZipFile(dirs.output_zip_name, 'w') as f:
         f.write(os.path.join(dirs.script_folder, 'team.txt'), 'team.txt')
         for filename in solution_files[dirs.target_basename]:
             f.write(os.path.join(dirs.assignment_folder, filename), filename)
+    print("Solution file generated at: " + dirs.output_zip_name)
 
 def runTest(dirs):
     print("Run test cases...")
@@ -59,6 +68,7 @@ if __name__ == "__main__":
     parser.add_argument('--clean', action='store_true', help='Clean build folder')
     parser.add_argument('target_folder', nargs=1, help="Name of the target homework folder")
     parser.add_argument('--test', action='store_true', help='Run test cases')
+    parser.add_argument('--compress', action='store_true', help='Compress homework file')
     parser.add_argument('--test-on-csif', action='store_true', help='Run test cases on csif')
     args = parser.parse_args()
 
@@ -70,11 +80,11 @@ if __name__ == "__main__":
         shutil.rmtree(dirs.build_root, ignore_errors=True)
         quit()
 
-    
-    runBuild(dirs)
-    if args.test:
+    if args.test or args.compress:
         runTest(dirs)
 
     if args.test_on_csif:
         runTestOnCSIF(dirs)
     
+    if args.compress:
+        runCompress(dirs)
