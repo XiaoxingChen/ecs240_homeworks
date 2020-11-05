@@ -2,6 +2,7 @@
 import argparse
 import os
 import shutil
+import sys
 from zipfile import ZipFile
 
 def handleAutoComplete():
@@ -32,7 +33,10 @@ class BuildDirectory():
         self.assignment_folder = os.path.join(self.script_folder, target_folder_name)
         self.output_zip_name = os.path.join(self.build_root, target_folder_name.replace('handout', 'solution') + '.zip')
         self.assignment_test_script = os.path.join(self.assignment_folder, 'test_main.py')
-    
+        if sys.platform == 'win32':
+            self.python_exe = 'python'
+        else:
+            self.python_exe = 'python3'
 
 def runCompress(dirs):
     os.makedirs(dirs.build_root, exist_ok=True)
@@ -44,7 +48,7 @@ def runCompress(dirs):
 
 def runTest(dirs):
     print("Run test cases...")
-    exit_code = os.system("python3 {}".format(dirs.assignment_test_script))
+    exit_code = os.system("{} {}".format(dirs.python_exe, dirs.assignment_test_script))
     if(exit_code != 0):
         raise RuntimeError('unit test failed')
 
