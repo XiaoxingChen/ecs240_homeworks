@@ -12,6 +12,14 @@
     - alias_of(pairs, statement)
     - assign_of(pairs, statement)
     - deref_of(pairs, statement)
+    - Andersen algorithm (Finished)
+    - Chakaravarthy's algorithm
+2. Rewrite the statements and extend the reference and dereference (Finished but need testing)
+3. Andersen's algorithm
+    - address_of(dict, statement)
+    - copy(dict, statement)
+    - assign(dict, statement)
+    - deference(dict, statement)
 4. Chakaravarthy's algorithm (to discuss data structure)
     - Direct assignments [implemented][todo test]
     - Copying statements [implemented][todo test]
