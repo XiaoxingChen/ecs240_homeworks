@@ -2,9 +2,9 @@
 
 ## Task Planning
 1. Input and output 
-    - Andersen algorithm ($\checkmark$)
+    - Andersen algorithm (Finished)
     - Chakaravarthy's algorithm
-2. Rewrite the statements and extend the reference and dereference
+2. Rewrite the statements and extend the reference and dereference (Finished but need testing)
 3. Andersen's algorithm
     - address_of(dict, statement)
     - copy(dict, statement)

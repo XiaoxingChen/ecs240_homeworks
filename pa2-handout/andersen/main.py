@@ -18,88 +18,73 @@ class SetOfStatements:
 
     def addStatements(self, lst):
         self.statements.append(lst)
+    
+    def setStatement(self, statements):
+        self.statements = statements
 
     def __str__(self):
         output = "node_num: {}\n".format(self.node_num) + "stat_num: {}\n".format(self.stat_num)
         output += "pairs: {}\n".format(self.pairs) + "statements: {}".format(self.statements)
         return output
 
-    def extendDeref(self, extra_node_num, statement):
-        pass
+    # extend the deferences
+    def extendDeref(self, extra_node_num, statement, dividing):
+        """Extend the dereferences.
+        args: 
+        --------
+        extra_node_number: int
+            number of temporary variables
+        statement: list 
+            statement in the original input
+        dividing: int
+            differentiate left and right dereferences
+        """
+        new_nodes = [str(statement[1])]
+        for extra_node in range(self.extend_node_num+1, extra_node_num+self.extend_node_num+1):
+            new_nodes.extend([str(extra_node), str(extra_node)])
+        new_nodes.append(str(statement[3]))
 
-    # treat the statements like a queue
+        #create new statements
+        for i in range(0, dividing):
+            self.addStatements(['1', new_nodes[2*i], '0', new_nodes[2*i+1]])
+        for i in range(dividing, extra_node_num + 1):
+            self.addStatements(['0', new_nodes[2*i], '-1', new_nodes[2*i+1]])
+        
+        self.extend_node_num += extra_node_num
+        self.extend_stat_num += extra_node_num + 1
+
     def rewriteStatements(self):
+        """Extend dereferences of the statements and Append those new statements."""
         for statement in self.statements[:]:
             statement = list(map(int, statement))
             # '&' on the right hand side 
             if statement[2] == -1:
-                # no deref on the left hand side 
+                # p = &q
                 if statement[0] == 0:
                     self.addStatements(statement)
                     self.extend_stat_num += 1
                     continue
-
-                extra_node_num = statement[0]
-                # [2 p -1 q] => [p p+1 p+1 p+2 p+2 q]
-                new_nodes = [str(statement[1])]
-                for extra_node in range(self.extend_node_num+1, extra_node_num+self.extend_node_num+1):
-                    new_nodes.extend([str(extra_node), str(extra_node)])
-                new_nodes.append(str(statement[3]))
-
-                #create new statements
-                for i in range(0, extra_node_num):
-                    self.addStatements(['1', new_nodes[2*i], '0', new_nodes[2*i+1]])
-                for i in range(extra_node_num, extra_node_num + 1):
-                    self.addStatements(['0', new_nodes[2*i], '-1', new_nodes[2*i+1]])
-                
-                self.extend_node_num += extra_node_num
-                self.extend_stat_num += extra_node_num + 1
-
-            # '*' on the left hand side and no ref or defer in the right hand side
+                else:
+                    self.extendDeref(statement[0], statement, statement[0])
+            # no ref or defer in the right hand side
             elif statement[2] == 0:
-                # p = q
-                if statement[0] == 0:
+                # p = q or *p = q
+                if statement[0] == 0 or statement[0] == 1:
                     self.addStatements(statement)
                     self.extend_stat_num += 1
                     continue
-
-                extra_node_num = statement[0] - 1
-                # [2 p -1 q] => [p p+1 p+1 p+2 p+2 q]
-                new_nodes = [str(statement[1])]
-                for extra_node in range(self.extend_node_num+1, extra_node_num+self.extend_node_num+1):
-                    new_nodes.extend([str(extra_node), str(extra_node)])
-                new_nodes.append(str(statement[3]))
-
-                #create new statements
-                for i in range(0, extra_node_num):
-                    self.addStatements(['1', new_nodes[2*i], '0', new_nodes[2*i+1]])
-                for i in range(extra_node_num, extra_node_num + 1):
-                    self.addStatements(['0', new_nodes[2*i], '0', new_nodes[2*i+1]])
-                
-                self.extend_node_num += extra_node_num
-                self.extend_stat_num += extra_node_num + 1
-            
-            # "*" on both sides 
+                else:
+                    self.extendDeref(statement[0]-1, statement, statement[0])           
+            # "*" on the right hand side
             else:
-                extra_node_num = statement[0] + statement[2] - 1
-                # **p = **q => *p = t1, *t1 = t2, t2 = *t3, t3 = *q
-                new_nodes = [str(statement[1])]
-                for extra_node in range(self.extend_node_num+1, extra_node_num+self.extend_node_num+1):
-                    new_nodes.extend([str(extra_node), str(extra_node)])
-                new_nodes.append(str(statement[3]))
-
-                #create new statements
-                for i in range(0, statement[0]):
-                    self.addStatements(['1', new_nodes[2*i], '0', new_nodes[2*i+1]])
-                for i in range(statement[0], extra_node_num+1):
-                    self.addStatements(['0', new_nodes[2*i], '1', new_nodes[2*i+1]])
-                
-                self.extend_node_num += extra_node_num
-                self.extend_stat_num += extra_node_num + 1
-        return self.statements[self.stat_num: self.extend_stat_num]
-
-    def getPairs(self):
-        return self.pairs
+                # p = *q
+                if statement[2] == 1 and statement[0] == 0:
+                    self.addStatements(statement)
+                    self.extend_stat_num += 1
+                    continue
+                else:
+                    self.extendDeref(statement[0]+statement[2]-1, statement, statement[0])
+        self.setStatement(self.statements[self.stat_num: self.extend_stat_num])
     
     def removeUnnecessaryNodes(self):
         pass
@@ -132,5 +117,6 @@ if __name__ == "__main__":
         sys.exit("The number of arguments is wrong, please try again")
     input_file, output_file = [os.path.abspath(os.path.realpath(n)) for n in sys.argv[1:3]]
     sos = parseInput(input_file)
-    print(sos.rewriteStatements())
+    sos.rewriteStatements()
+    print(sos)
     # writeToOutput(pairs, output_file)
