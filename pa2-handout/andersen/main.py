@@ -3,6 +3,16 @@ import os
 import copy
 
 class SetOfStatements:
+    """Summary of SetofStatements class here.
+
+    Attributes: 
+        node_num: An integer count of the nodes from the input.
+        stat_num: An integer count of the statements from the input.
+        extend_node_num: An integer count of the node after extending the statements with temporary variables.
+        extend_stat_num: An integer count of the statements after extending the statements.
+        pairs: An dictionary indicating the realizable pairs.
+        statements: An list containing the statements.
+    """
     def __init__(self, node_num, stat_num):
         self.node_num = node_num
         self.stat_num = stat_num
@@ -22,11 +32,13 @@ class SetOfStatements:
         self.statements.append(lst)
     
     def setStatement(self, statements):
+        """Reset statements after extending statements with temporary variables"""
         self.stat_num = len(statements)
         self.extend_stat_num = len(statements)
         self.statements = statements
 
     def __str__(self):
+        """Just for clear print"""
         output = "node_num: {}\n".format(self.node_num) + "stat_num: {}\n".format(self.stat_num)
         output += "pairs: {}\n".format(self.pairs) + "statements: {}".format(self.statements)
         return output
@@ -34,14 +46,13 @@ class SetOfStatements:
     # extend the deferences
     def extendDeref(self, extra_node_num, statement, dividing, mark):
         """Extend the dereferences.
-        args: 
-        --------
-        extra_node_number: int
-            number of temporary variables
-        statement: list 
-            statement in the original input
-        dividing: int
-            differentiate left and right dereferences
+        
+        Args: 
+            extra_node_number: An integer count of temporary variables.
+            statement: A list containing the content of the statement.
+            dividing: An integer to differentiate left and right dereferences.
+            mark: Choose from ("-1", "0", "1") to differentiate 
+                the mark ("*", " ", "&") on the right hand side.
         """
         new_nodes = [str(statement[1])]
         for extra_node in range(self.extend_node_num+1, extra_node_num+self.extend_node_num+1):
@@ -89,10 +100,15 @@ class SetOfStatements:
                     continue
                 else:
                     self.extendDeref(statement[0]+statement[2]-1, statement, statement[0], '1')
+        # reset the statements
         self.setStatement(self.statements[self.stat_num: self.extend_stat_num])
     
     def removeUnnecessaryNodes(self):
-        """Remove temporary nodes"""
+        """Remove temporary nodes
+        
+        Return: 
+            A dict containing the realizable pairs.
+        """
         pairs = copy.deepcopy(self.pairs)
         for pair in pairs:
             if int(pair) > self.node_num:
@@ -105,6 +121,7 @@ class SetOfStatements:
         while change:
             change = False
             for statement in self.statements[:]:
+                # TODO(Haochen): Test this try-except
                 try:
                     if (self.address_of(statement) or self.alias_of(statement) 
                         or self.assign_of(statement) or self.deref_of(statement)):
@@ -191,12 +208,6 @@ def parseInput(input_file):
     return sos
 
 def writeToOutput(pairs, output_file):
-    """Write pairs to output file in random order.
-    args: 
-    --------
-    output_file: str
-        name of the output_file
-    """
     output = ""
     for from_node in pairs:
         for to_node in pairs[from_node]:
