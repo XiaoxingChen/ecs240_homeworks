@@ -91,7 +91,11 @@ class SetOfStatements:
         self.setStatement(self.statements[self.stat_num: self.extend_stat_num])
     
     def removeUnnecessaryNodes(self):
-        pass
+        """Remove temporary nodes"""
+        pairs = copy.deepcopy(self.pairs)
+        for pair in pairs:
+            if int(pair) > self.node_num:
+                del self.pairs[pair]
 
     def andersenAlgorithm(self):
         """Andersen's fixpoint algorithm"""
@@ -207,5 +211,7 @@ if __name__ == "__main__":
     sos = parseInput(input_file)
     sos.rewriteStatements()
     sos.andersenAlgorithm()
+    print(sos)
+    sos.removeUnnecessaryNodes()
     print(sos)
     # writeToOutput(pairs, output_file)
