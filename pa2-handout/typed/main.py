@@ -1,31 +1,169 @@
 import os
 import sys
 
-class TypedPointToAnalysis():
-    def __init__(self, n, s):
-        """
-        self.nodes_in_type:
-            key: type (int) 
-            val: list of nodes
+def combination2(nodes):
+    ret = []
+    sorted_nodes = sorted(nodes)
+    for i in range(len(sorted_nodes)):
+        for j in range(0, i):
+            ret.append((sorted_nodes[j], sorted_nodes[i]))
+    return ret
 
+class LayeredGraph():
+    """
+    self.nodes_in_layer:
+        key: layer (int) 
+        val: set of nodes
+
+    self.layer_of_node:
+        key: node (int) 
+        val: layer (int)
+
+    self.successors:
+        key: node (int) 
+        val: set() (set of nodes)
+    """
+    def __init__(self):
+        self.successors = {}
+        self.layer_of_node = {}
+        self.nodes_in_layer = {}
+
+    def layer(self, node):
+        return self.layer_of_node(node)
+
+    def maxLayer(self):
+        return max(self.nodes_in_layer.keys())
+    
+    def nodes(self, layer):
+        return self.nodes_in_layer(layer)
+
+    def addNode(self, node, layer):
+        self.layer_of_node[node] = layer
+        if layer not in self.nodes_in_layer:
+            self.nodes_in_layer[layer] = set()
+        self.nodes_in_layer[layer].add(node)
+
+    def addEdge(self, from_node, to_node):
+        if from_node not in self.layer_of_node:
+            print("node {} not found".format(from_node))
+        
+        if to_node not in self.layer_of_node:
+            print("node {} not found".format(to_node))
+
+        if from_node not in self.successors:
+            self.successors[from_node] = set()
+        self.successors[from_node].add(to_node)
+
+    def kGenerationSuccessors(self, node, k):
+        """
+        Return the k-th generation successors of a layered graph.
+        The layred graph is represented in successors_dict.
+        """
+        fifo = set([node])
+        for i in range(k):
+            nodes_this_layer = list(fifo)
+            fifo = set()
+            for node in nodes_this_layer:
+                fifo.update(self.successors[node])
+
+        return fifo
+
+    def checkConnected(self, from_node, to_node):
+        """
+        Check path exist in a layered graph from `from_node` to `to_node`.
+        The layred graph is represented in successors_dict.
+        """
+        delta_layer = self.layer(from_node) - self.layer(to_node)
+        return delta_layer in self.kGenerationSuccessors(from_node, delta_layer)
+
+    def dualNodeGraph(self, target_layer, cumulate_forbiddens):
+        """
+        Implementation of section 2.3: G' = (V', E')
+        """
+        dual_node_graph = LayeredGraph()
+
+        for l in range(self.maxLayer(), target_layer, -1):
+            for this_node in combination2(self.nodes(l)):
+                for next_node in combination2(self.nodes(l-1)):
+                    parallel_edge = (this_node[0], next_node[0], this_node[1], next_node[1])
+                    cross_edge = (this_node[0], next_node[1], this_node[1], next_node[0])
+                    if parallel_edge in cumulate_forbiddens[l] and cross_edge in cumulate_forbiddens[l]:
+                        # both are forbidden pairs
+                        continue
+                    
+                    dual_node_graph.addNode(this_node, l)
+                    dual_node_graph.addNode(next_node, l-1)
+                    dual_node_graph.addEdge(this_node, next_node)
+
+        return dual_node_graph
+
+    def checkPathVertexDisjoint(self, s1, t1, s2, t2, forbidden_pairs):
+        """
+        Check vertex disjoint path exist in a layered graph.
+        path1: start from s1 at layer_s1, target at t1;
+        path2: start from s2 at layer_s2, target at t2;
+
+        Implementation of Theorem 6. in Paper 2.3;
+        """
+        assert(self.layer(t1) == self.layer(t2))
+        target_layer = self.layer(t1)
+
+        if self.layer(s1) > self.layer(s2):
+            s1, t1, s2, t2 = s2, t2, s1, t1
+        
+        dual_node_graph = self.dualNodeGraph(target_layer, forbidden_pairs)
+        
+        for s2_suc in kGenerationSuccessors(successors, s2, delta_layer):
+            dual_node_from = sorted([s1, s2_suc])
+            dual_node_to = sorted([t1, t2])
+            
+            if dual_node_graph.checkConnected(dual_node_from, dual_node_to):
+                return True
+        return False
+
+class ForbiddenPair():
+    def __init__(self, max_layer):
+        """
         self.forbidden_pairs: 
             key: layer (int)
             val: 4-tuple (from, to, from, to) in set()
+        """
+        self.forbidden_pairs = {k: set() for k in range(max_layer + 1)}
 
+    def addForbiddenPair(self, layer, from1, to1, from2, to2):
+        self.forbidden_pairs[layer].add((from1, to1, from2, to2))
+        self.forbidden_pairs[layer].add((from2, to2, from1, to1))
+
+    def cumulate(self, start_layer_inclusive):
+        """
+        Implemention of figure 4: step 5.
+        (const member function)
+        """
+        ret = set()
+        for i in range(start_layer_inclusive, self.maxLayer() + 1):
+            ret.update(self.forbidden_pairs[i])
+        return ret
+
+
+
+class TypedPointToAnalysis():
+    def __init__(self, n, s):
+        """
         self.raw_statements:
             4-tuple (order, from, order, to) in list()
         """
         self.variable_num = n
         self.statement_num = s
 
-        self.type_dict = {}
-        self.nodes_in_type = {}
-
         self.raw_statements = []
-        self.successors = {}
-        self.forbidden_pairs = {}
+        self.type_dict = {}
+        
 
     def directAssignments(self, target_layer):
+        """
+        return all direct assignment statements(*^d p = &z) in raw_statements
+        (const member function)
+        """
         ret = []
         for d, p, to_order, z in self.raw_statements:
             if to_order != -1:
@@ -37,7 +175,11 @@ class TypedPointToAnalysis():
             ret.append((d, p, to_order, z))
         return ret
 
-    self.copyingStatements(self, target_layer):
+    def copyingStatements(self, target_layer):
+        """
+        return all copy statements (*^{d_1}p_1 = *^{d_2}p_2) in raw_statements
+        (const member function)
+        """
         ret = []
         for d1, p1, d2, p2 in self.raw_statements:
             if d2 < 0:
@@ -48,13 +190,6 @@ class TypedPointToAnalysis():
                 continue
             ret.append((d1, p1, d2, p2))
         return ret
-
-    def cumulateForbiddens(self, start_layer_inclusive):
-        ret = set()
-        for i in range(start_layer_inclusive, self.maxLayer() + 1):
-            ret.update(self.forbidden_pairs[i])
-        return ret
-
                 
     def addType(self, var, its_type):
         # be careful that "type" is a keyword of python
@@ -64,47 +199,35 @@ class TypedPointToAnalysis():
 
         self.nodes_in_type[its_type].append(var)
 
-    def maxLayer(self):
-        return max(self.nodes_in_type.keys())
-
     def addStatement(self, tuple_len_4):
         self.raw_statements.append(tuple_len_4)
 
-    def kGenerationSuccessors(self, node, k):
-        fifo = set([node])
-        for i in range(k):
-            nodes_this_layer = list(fifo)
-            fifo = set()
-            for node in nodes_this_layer:
-                fifo.update(self.successors[node])
-
-        return fifo
-
     def solve(self):
+        realizable_graph = LayeredGraph()
+        forbidden_pair = ForbiddenPair()
         for l in range(self.maxLayer(), 0, -1):
             # 1. 2. 3.
-            v_ccp = list(self.nodes_in_type[l])
-            c_ccp = list(self.nodes_in_type[l-1])
+            v_ccp = list(realizable_graph.nodes(l)) 
+            c_ccp = list(realizable_graph.nodes(l-1))
             s_ccp = []
             # 4. 
             for d, p, _, z in self.directAssignments(l):
-                for q in self.nodes_in_type(l):
-                    if q not in self.kGenerationSuccessors(p, d):
-                        continue
-                    s_ccp.append((q,z))
+                for q in realizable_graph.nodes(l):
+                    if realizable_graph.checkConnected(p, q):
+                        s_ccp.append((q,z))
             # 5.
-            forbiddens = self.cumulateForbiddens(l + 1)
+            forbiddens = forbidden_pair.cumulate(l+1)
             # 6.
             for d1, p1, d2, p2 in self.copyingStatements(l):
-                pass # todo
-            # 7.
-            # 8.
-            # 9.
-            # 10.
+                for q1, q2 in combination2(realizable_graph.nodes(l)):
+                    if realizable_graph.checkPathVertexDisjoint(p1, q1, p2, q2, forbiddens):
+                        s_ccp.append((q1, q2))
+            # 7. update lamda1_ccp
+            # 8. update realizable_graph
+            # 9. update lamda2_ccp
+            # 10. initialize forbidden_pair of this layer
             self.forbidden_pairs[l] = set()
-            # 11.
-                
-
+            # 11. update forbidden_pair of this layer
     
 
 def parseInputFile(filename):
