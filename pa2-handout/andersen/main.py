@@ -1,5 +1,6 @@
 import sys
 import os
+import copy
 
 class SetOfStatements:
     def __init__(self, node_num, stat_num):
@@ -12,7 +13,8 @@ class SetOfStatements:
 
     def addPair(self, from_node, to_node):
         if from_node not in self.pairs.keys():
-            self.pairs[from_node] = set(to_node)
+            self.pairs[from_node] = set()
+            self.pairs[from_node].add(to_node)
         else:
             self.pairs[from_node].add(to_node)
 
@@ -30,7 +32,7 @@ class SetOfStatements:
         return output
 
     # extend the deferences
-    def extendDeref(self, extra_node_num, statement, dividing):
+    def extendDeref(self, extra_node_num, statement, dividing, mark):
         """Extend the dereferences.
         args: 
         --------
@@ -50,7 +52,7 @@ class SetOfStatements:
         for i in range(0, dividing):
             self.addStatements(['1', new_nodes[2*i], '0', new_nodes[2*i+1]])
         for i in range(dividing, extra_node_num + 1):
-            self.addStatements(['0', new_nodes[2*i], '-1', new_nodes[2*i+1]])
+            self.addStatements(['0', new_nodes[2*i], mark, new_nodes[2*i+1]])
         
         self.extend_node_num += extra_node_num
         self.extend_stat_num += extra_node_num + 1
@@ -67,8 +69,8 @@ class SetOfStatements:
                     self.extend_stat_num += 1
                     continue
                 else:
-                    self.extendDeref(statement[0], statement, statement[0])
-            # no ref or defer in the right hand side
+                    self.extendDeref(statement[0], statement, statement[0], '-1')
+            # " " on the right hand side
             elif statement[2] == 0:
                 # p = q or *p = q
                 if statement[0] == 0 or statement[0] == 1:
@@ -76,7 +78,7 @@ class SetOfStatements:
                     self.extend_stat_num += 1
                     continue
                 else:
-                    self.extendDeref(statement[0]-1, statement, statement[0])           
+                    self.extendDeref(statement[0]-1, statement, statement[0], '0')           
             # "*" on the right hand side
             else:
                 # p = *q
@@ -85,13 +87,14 @@ class SetOfStatements:
                     self.extend_stat_num += 1
                     continue
                 else:
-                    self.extendDeref(statement[0]+statement[2]-1, statement, statement[0])
+                    self.extendDeref(statement[0]+statement[2]-1, statement, statement[0], '1')
         self.setStatement(self.statements[self.stat_num: self.extend_stat_num])
     
     def removeUnnecessaryNodes(self):
         pass
 
     def andersenAlgorithm(self):
+        """Andersen's fixpoint algorithm"""
         change = True
         while change:
             change = False
@@ -107,8 +110,10 @@ class SetOfStatements:
         a = &c => <a, c>
         """
         if statement[0] == '0' and statement[2] == '-1':
-            self.addPair(statement[1], statement[3])
+            a, c = statement[1], statement[3]
+            self.addPair(a, c)
             self.statements.remove(statement)
+            print("address_of")
             return True
         else:
             return False
@@ -117,13 +122,17 @@ class SetOfStatements:
         """Test p = q
         b = a, <a, c> => <b, c>
         """
-        pairs = self.pairs
+        pairs = copy.deepcopy(self.pairs)
         if statement[0] == '0' and statement[2] == '0':
             b, a = statement[1], statement[3]
             for c in pairs[a]:
+                if b not in pairs.keys():
+                    self.addPair(b, c)
+                    return True
                 if c not in pairs[b]:
-                    pairs[b].add(c)
-                    self.statements.remove(statement)
+                    self.addPair(b, c)
+                    # self.statements.remove(statement)
+                    print("alias_of")
                     return True 
             return False
         else:
@@ -133,14 +142,18 @@ class SetOfStatements:
         """Test p = *q
         d = *a, <a, c>, <c, b> => <d, b>
         """
-        pairs = self.pairs
+        pairs = copy.deepcopy(self.pairs)
         if statement[0] == '0' and statement[2] == '1':
             d, a = statement[1], statement[3]
-            for c in pairs[statement[3]]:
+            for c in pairs[a]:
                 for b in pairs[c]:
-                    if b not in pairs[b]:
-                        pairs[d].add(b)
-                        self.statements.remove(statement)
+                    if d not in pairs.keys():
+                        self.addPair(d, b)
+                        return True
+                    if b not in pairs[d]:
+                        self.addPair(d, b)
+                        print("assign_of")
+                        # self.statements.remove(statement)
                         return True
             return False
         else:
@@ -150,14 +163,15 @@ class SetOfStatements:
         """Test *p = q
         *b = c, <b, a>, <c, b> => <a, b>
         """
-        pairs = self.pairs
+        pairs = copy.deepcopy(self.pairs)
         if statement[0] == '1' and statement[2] == '0':
             b, c = statement[1], statement[3]
             for a in pairs[b]:
                 for b in pairs[c]:
                     if b not in pairs[a]:
-                        pairs[a].add(b)
-                        self.statements.remove(statement)
+                        self.addPair(a, b)
+                        print("deref_of")
+                        # self.statements.remove(statement)
                         return True
             return False
         else:
