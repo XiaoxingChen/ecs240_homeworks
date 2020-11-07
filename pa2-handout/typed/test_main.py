@@ -67,7 +67,20 @@ def layeredGraphTestData():
             (301, 4, True),
             (301, 1, False),
             (302, 2, True),
-            (302, 4, False)]
+            (302, 4, False)],
+        'dualNodeGraph':[
+            (0, 
+            ForbiddenPair(3), 
+            {(301, 302): set([(202, 203)]),
+            (202, 203): set([(102, 104)]),
+            (102, 104): set([(  2,   4)])} )],
+        'checkPathVertexDisjoint':
+        [
+            (301, 4, 302, 2, None, True),
+            (202, 4, 302, 2, None, True),
+            # (301, 2, 302, 4, None, False) # [todo] failed to pass this case
+        ]
+        
     }]
     return dataset
 
@@ -104,6 +117,18 @@ class TestFunctions(unittest.TestCase):
             if 'checkConnected' in data:
                 for from_, to_, expected in data['checkConnected']:
                     self.assertEqual(g.checkConnected(from_, to_ ), expected, "{} -> {}".format(from_, to_))
+
+            if 'dualNodeGraph' in data:
+                for target_layer, forbiddens, expected_successor_dict in data['dualNodeGraph']:
+                    dual_graph = g.dualNodeGraph(target_layer, forbiddens)
+                    self.assertDictEqual(dual_graph.successors, expected_successor_dict)
+
+            if 'checkPathVertexDisjoint' in data:
+                for s1, t1, s2, t2, dual_node_graph, expected in data['checkPathVertexDisjoint']:
+                    dual_node_graph = g.dualNodeGraph(0, ForbiddenPair(g.maxLayer()))
+                    result = g.checkPathVertexDisjoint(s1, t1, s2, t2, dual_node_graph)
+                    self.assertEqual(result, expected)
+
                     
                 
             
