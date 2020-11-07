@@ -29,13 +29,13 @@ class LayeredGraph():
         self.nodes_in_layer = {}
 
     def layer(self, node):
-        return self.layer_of_node(node)
+        return self.layer_of_node[node]
 
     def maxLayer(self):
         return max(self.nodes_in_layer.keys())
     
     def nodes(self, layer):
-        return self.nodes_in_layer(layer)
+        return self.nodes_in_layer[layer]
 
     def addNode(self, node, layer):
         self.layer_of_node[node] = layer
@@ -74,7 +74,7 @@ class LayeredGraph():
         The layred graph is represented in successors_dict.
         """
         delta_layer = self.layer(from_node) - self.layer(to_node)
-        return delta_layer in self.kGenerationSuccessors(from_node, delta_layer)
+        return to_node in self.kGenerationSuccessors(from_node, delta_layer)
 
     def dualNodeGraph(self, target_layer, cumulate_forbiddens):
         """
@@ -144,6 +144,92 @@ class ForbiddenPair():
             ret.update(self.forbidden_pairs[i])
         return ret
 
+
+class ConcurrentCopyPropagation():
+    def __init__(self, variables, constants, statements):
+        """
+        """
+        assert(type(variables) == set)
+        assert(type(constants) == set)
+        self.variables = variables
+        self.constants = constants
+        self.statements = statements
+
+    def statementsConstToVar(self):
+        ret = []
+        for s in self.statements:
+            if s[0] in self.variables and s[1] in self.constants:
+                ret.append(s)
+        return ret
+
+    def statementsVarToVar(self):
+        ret = []
+        for s in self.statements:
+            if s[0] in self.variables and s[1] in self.variables:
+                ret.append(s)
+        return ret
+
+    def findAvailablePairs(self, X, x, Y, y):
+        """
+        Implementation of Theorem 8, three steps
+        """
+        lambda_ = set()
+        # step 1.
+        for Z, z in self.statementsConstToVar():
+            if(Z != X):
+                lambda_.add(tuple( sorted([(X, x),(Z, z)]) ))
+        
+        # step 2. 3.
+        for Z, P in self.statementsVarToVar():
+            if P != X:
+                continue
+            if Z != X:
+                lambda_.add(tuple( sorted([(X, x),(Z, x)]) ))
+            if Z != Y:
+                lambda_.add(tuple( sorted([(Z, x),(Y, y)]) ))
+
+        return lambda_
+
+    def solve1ccp(self):
+        """
+        Implementation of THEOREM 7.
+        """
+        lambda_ = set(self.statementsConstToVar())
+        while True:
+            new_lambda = set()
+            for var_x, const_x in lambda_:
+                for var_l, var_r in self.statementsVarToVar():
+                    if var_r != var_x:
+                        continue
+                    new_lambda.add((var_l, const_x))
+            
+            if new_lambda.issubset(lambda_):
+                break
+
+            lambda_.update(new_lambda)
+
+        return lambda_
+
+    def solve2ccp(self):
+        """
+        Implementation of THEOREM 8.
+        """
+        lambda_ = set(combination2(self.statementsConstToVar()))
+        while True:
+            new_lambda = set()
+            for (var_x, const_x), (var_y, const_y) in lambda_:
+                new_lambda.update(self.findAvailablePairs(var_x, const_x, var_y, const_y))
+                new_lambda.update(self.findAvailablePairs(var_y, const_y, var_x, const_x))
+
+            if new_lambda.issubset(lambda_):
+                break
+
+            lambda_.update(new_lambda)
+        return lambda_
+
+
+
+            
 
 
 class TypedPointToAnalysis():
@@ -223,11 +309,20 @@ class TypedPointToAnalysis():
                     if realizable_graph.checkPathVertexDisjoint(p1, q1, p2, q2, forbiddens):
                         s_ccp.append((q1, q2))
             # 7. update lamda1_ccp
+            ccp_problem = ConcurrentCopyPropagation(v_ccp, c_ccp, s_ccp)
+            lamda1_ccp = ccp_problem.solve1ccp()
             # 8. update realizable_graph
+            for from_node, to_node in lamda1_ccp:
+                # [todo] when to call addNode() ?
+                realizable_graph.addEdge(from_node, to_node)
             # 9. update lamda2_ccp
+            lamda2_ccp = ccp_problem.solve2ccp()
             # 10. initialize forbidden_pair of this layer
             self.forbidden_pairs[l] = set()
             # 11. update forbidden_pair of this layer
+            for pair in combination2(lamda1_ccp):
+                if pair not in lamda2_ccp:
+                    self.forbidden_pairs[l].add(pair)
     
 
 def parseInputFile(filename):
