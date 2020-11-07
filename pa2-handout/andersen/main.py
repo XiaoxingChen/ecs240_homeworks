@@ -20,6 +20,8 @@ class SetOfStatements:
         self.statements.append(lst)
     
     def setStatement(self, statements):
+        self.stat_num = len(statements)
+        self.extend_stat_num = len(statements)
         self.statements = statements
 
     def __str__(self):
@@ -61,7 +63,7 @@ class SetOfStatements:
             if statement[2] == -1:
                 # p = &q
                 if statement[0] == 0:
-                    self.addStatements(statement)
+                    self.addStatements(list(map(str, statement)))
                     self.extend_stat_num += 1
                     continue
                 else:
@@ -70,7 +72,7 @@ class SetOfStatements:
             elif statement[2] == 0:
                 # p = q or *p = q
                 if statement[0] == 0 or statement[0] == 1:
-                    self.addStatements(statement)
+                    self.addStatements(list(map(str, statement)))
                     self.extend_stat_num += 1
                     continue
                 else:
@@ -79,7 +81,7 @@ class SetOfStatements:
             else:
                 # p = *q
                 if statement[2] == 1 and statement[0] == 0:
-                    self.addStatements(statement)
+                    self.addStatements(list(map(str, statement)))
                     self.extend_stat_num += 1
                     continue
                 else:
@@ -88,6 +90,78 @@ class SetOfStatements:
     
     def removeUnnecessaryNodes(self):
         pass
+
+    def andersenAlgorithm(self):
+        change = True
+        while change:
+            change = False
+            for statement in self.statements[:]:
+                try:
+                    if self.address_of(statement) or self.alias_of(statement) or self.assign_of(statement) or self.deref_of(statement):
+                        change = True
+                except KeyError:
+                    continue
+
+    def address_of(self, statement):
+        """Test p = &q
+        a = &c => <a, c>
+        """
+        if statement[0] == '0' and statement[2] == '-1':
+            self.addPair(statement[1], statement[3])
+            self.statements.remove(statement)
+            return True
+        else:
+            return False
+
+    def alias_of(self, statement):
+        """Test p = q
+        b = a, <a, c> => <b, c>
+        """
+        pairs = self.pairs
+        if statement[0] == '0' and statement[2] == '0':
+            b, a = statement[1], statement[3]
+            for c in pairs[a]:
+                if c not in pairs[b]:
+                    pairs[b].add(c)
+                    self.statements.remove(statement)
+                    return True 
+            return False
+        else:
+            return False
+
+    def assign_of(self, statement):
+        """Test p = *q
+        d = *a, <a, c>, <c, b> => <d, b>
+        """
+        pairs = self.pairs
+        if statement[0] == '0' and statement[2] == '1':
+            d, a = statement[1], statement[3]
+            for c in pairs[statement[3]]:
+                for b in pairs[c]:
+                    if b not in pairs[b]:
+                        pairs[d].add(b)
+                        self.statements.remove(statement)
+                        return True
+            return False
+        else:
+            return False
+
+    def deref_of(self, statement):
+        """Test *p = q
+        *b = c, <b, a>, <c, b> => <a, b>
+        """
+        pairs = self.pairs
+        if statement[0] == '1' and statement[2] == '0':
+            b, c = statement[1], statement[3]
+            for a in pairs[b]:
+                for b in pairs[c]:
+                    if b not in pairs[a]:
+                        pairs[a].add(b)
+                        self.statements.remove(statement)
+                        return True
+            return False
+        else:
+            return False
 
 def parseInput(input_file):
     sos = None
@@ -118,5 +192,6 @@ if __name__ == "__main__":
     input_file, output_file = [os.path.abspath(os.path.realpath(n)) for n in sys.argv[1:3]]
     sos = parseInput(input_file)
     sos.rewriteStatements()
+    sos.andersenAlgorithm()
     print(sos)
     # writeToOutput(pairs, output_file)
