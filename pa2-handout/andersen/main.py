@@ -49,7 +49,8 @@ class SetOfStatements:
         new_nodes.append(str(statement[3]))
 
         #create new statements
-        for i in range(0, dividing):
+        self.addStatements(['0', new_nodes[1], '1', new_nodes[0]])
+        for i in range(1, dividing):
             self.addStatements(['1', new_nodes[2*i], '0', new_nodes[2*i+1]])
         for i in range(dividing, extra_node_num + 1):
             self.addStatements(['0', new_nodes[2*i], mark, new_nodes[2*i+1]])
@@ -96,6 +97,7 @@ class SetOfStatements:
         for pair in pairs:
             if int(pair) > self.node_num:
                 del self.pairs[pair]
+        return self.pairs
 
     def andersenAlgorithm(self):
         """Andersen's fixpoint algorithm"""
@@ -104,7 +106,8 @@ class SetOfStatements:
             change = False
             for statement in self.statements[:]:
                 try:
-                    if self.address_of(statement) or self.alias_of(statement) or self.assign_of(statement) or self.deref_of(statement):
+                    if (self.address_of(statement) or self.alias_of(statement) 
+                        or self.assign_of(statement) or self.deref_of(statement)):
                         change = True
                 except KeyError:
                     continue
@@ -117,7 +120,6 @@ class SetOfStatements:
             a, c = statement[1], statement[3]
             self.addPair(a, c)
             self.statements.remove(statement)
-            print("address_of")
             return True
         else:
             return False
@@ -135,8 +137,6 @@ class SetOfStatements:
                     return True
                 if c not in pairs[b]:
                     self.addPair(b, c)
-                    # self.statements.remove(statement)
-                    print("alias_of")
                     return True 
             return False
         else:
@@ -156,8 +156,6 @@ class SetOfStatements:
                         return True
                     if b not in pairs[d]:
                         self.addPair(d, b)
-                        print("assign_of")
-                        # self.statements.remove(statement)
                         return True
             return False
         else:
@@ -174,8 +172,6 @@ class SetOfStatements:
                 for b in pairs[c]:
                     if b not in pairs[a]:
                         self.addPair(a, b)
-                        print("deref_of")
-                        # self.statements.remove(statement)
                         return True
             return False
         else:
@@ -194,8 +190,13 @@ def parseInput(input_file):
                 pass
     return sos
 
-# output in random order
 def writeToOutput(pairs, output_file):
+    """Write pairs to output file in random order.
+    args: 
+    --------
+    output_file: str
+        name of the output_file
+    """
     output = ""
     for from_node in pairs:
         for to_node in pairs[from_node]:
@@ -211,7 +212,5 @@ if __name__ == "__main__":
     sos = parseInput(input_file)
     sos.rewriteStatements()
     sos.andersenAlgorithm()
-    print(sos)
-    sos.removeUnnecessaryNodes()
-    print(sos)
-    # writeToOutput(pairs, output_file)
+    realizable_pairs = sos.removeUnnecessaryNodes()
+    writeToOutput(realizable_pairs, output_file)
