@@ -73,6 +73,7 @@ class LayeredGraph():
         Return the k-th generation successors of a layered graph.
         The layred graph is represented in successors_dict.
         """
+        assert(k >= 0)
         if hasattr(node, '__getitem__'):
             node = tuple(sorted(node))
         fifo = set([node])
@@ -104,16 +105,20 @@ class LayeredGraph():
         """
         dual_node_graph = LayeredGraph()
 
+        for this_node in combination2(self.nodes(self.maxLayer())):
+            dual_node_graph.addNode(this_node, self.maxLayer())
+
         for l in range(self.maxLayer(), target_layer, -1):
             for this_node in combination2(self.nodes(l)):
                 for next_node_0 in self.successors[this_node[0]]:
                     for next_node_1 in self.successors[this_node[1]]:
+                        next_node = [next_node_0, next_node_1]
+                        dual_node_graph.addNode(next_node, l-1)
+
                         edge_pair = [(this_node[0], next_node_0),(this_node[1], next_node_1)]
                         if forbidden_pair.existsAbove(edge_pair, l):
                             continue
-                        next_node = [next_node_0, next_node_1]
-                        dual_node_graph.addNode(this_node, l)
-                        dual_node_graph.addNode(next_node, l-1)
+                        
                         dual_node_graph.addEdge(this_node, next_node)
 
         return dual_node_graph
@@ -318,21 +323,27 @@ class TypedPointToAnalysis():
     def solve(self):
         max_layer = max(self.type_dict.values())
         realizable_graph = LayeredGraph()
+        for node in self.type_dict:
+            realizable_graph.addNode(node, self.type_dict[node])
         forbidden_pair = ForbiddenPair(max_layer)
         for l in range(max_layer, 0, -1):
             # 1. 2. 3.
-            v_ccp = [var for var in self.type_dict.keys() if (self.type_dict[var] == l)] 
-            c_ccp = [var for var in self.type_dict.keys() if (self.type_dict[var] == (l-1))]
+            v_ccp = set([var for var in self.type_dict.keys() if (self.type_dict[var] == l)])
+            c_ccp = set([var for var in self.type_dict.keys() if (self.type_dict[var] == (l-1))])
             s_ccp = []
             # 4. 
             for d, p, _, z in self.directAssignments(l):
                 for q in realizable_graph.nodes(l):
                     if realizable_graph.checkConnected(p, q):
                         s_ccp.append((q,z))
-            # 5.
-            # forbiddens = forbidden_pair.cumulate(l+1)
+
+            # 5. calculate the union of forbidden pairs above current layer: l
+            #   But we won't do this step here. 
+            #   The calculation is implemented in function: ForbiddenPair.existsAbove(layer, pair)
+            
             # 6.
             dual_node_graph = realizable_graph.dualNodeGraph(l, forbidden_pair)
+            
             for d1, p1, d2, p2 in self.copyingStatements(l):
                 for q1, q2 in combination2(realizable_graph.nodes(l)):
                     if realizable_graph.checkPathVertexDisjoint(p1, q1, p2, q2, dual_node_graph):
@@ -351,9 +362,10 @@ class TypedPointToAnalysis():
             # 11. update forbidden_pair of this layer
             for pair in combination2(lamda1_ccp):
                 if pair not in lamda2_ccp:
-                    forbidden_pair.add(pair)
+                    forbidden_pair.add(l, pair)
 
-        print(realizable_graph.successors)
+        # print(realizable_graph.successors)
+        return realizable_graph
     
 
 def parseInputFile(filename):
@@ -361,6 +373,9 @@ def parseInputFile(filename):
     with open(filename, 'r') as f:
         for line in f.readlines():
             line_content = line.split()
+            if line_content[0] == 'c':
+                continue
+
             line_content[1:] = [int(v) for v in line_content[1:]]
             if line_content[0] == 'p':
                 problem = TypedPointToAnalysis(line_content[1], line_content[2])
@@ -373,6 +388,14 @@ def parseInputFile(filename):
 
     return problem
 
+def writeOutput(filename, realizable_graph):
+    output_str = ''
+    for k in realizable_graph.successors:
+        for successor in realizable_graph.successors[k]:
+            output_str += ' '.join(['pt', str(k), str(successor)]) + '\n'
+    with open(filename, 'w') as f:
+        f.write(output_str)
+
 if __name__ == "__main__":
     if len(sys.argv) < 3:
         print("please specify input and output!")
@@ -380,4 +403,5 @@ if __name__ == "__main__":
 
     input_filename, output_filename = [os.path.realpath(p) for p in sys.argv[1:3]]
     problem = parseInputFile(input_filename)
-    # problem.solve()
+    realizable_graph = problem.solve()
+    writeOutput(output_filename, realizable_graph)

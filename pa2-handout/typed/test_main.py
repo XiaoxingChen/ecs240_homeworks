@@ -1,7 +1,22 @@
 import os
 import sys
 import unittest
+import shutil
 from main import *
+
+def parseRealizablePair(filename):
+    """
+    return set of 2-tuple
+    """
+    point_to = set()
+    with open(filename, 'r') as f:
+        for line in f.readlines():
+            line_content = line.split()
+            if line_content[0] != 'pt':
+                raise RuntimeError()
+            point_to.add(tuple(line_content[1:3]))
+
+    return point_to
 
 def ccpTestData():
     dataset = [
@@ -84,6 +99,23 @@ def layeredGraphTestData():
     }]
     return dataset
 
+def integrationTestDataset():
+    dataset = [
+        {'in': os.path.join('tests', 'p1.txt'),'expect': os.path.join('tests', 'expected1.txt')},
+        {'in': os.path.join('tests', 'p2.txt'),'expect': os.path.join('tests', 'expected2.txt')},
+        {'in': os.path.join('tests', 'p3.txt'),'expect': os.path.join('tests', 'expected3.txt')}
+    ]
+    return dataset
+
+class BuildDirectory():
+    def __init__(self):
+        self.script_folder = os.path.abspath(os.path.dirname(__file__))
+        self.build_root = os.path.join(self.script_folder, 'build')
+        self.test_temp_output = os.path.join(self.build_root, 'temp_test.txt')
+
+    def testFilePath(self, relative_path):
+        return os.path.join(self.script_folder, relative_path)
+
 class TestFunctions(unittest.TestCase):
     def test_basic(self):
         print("try test")
@@ -121,7 +153,13 @@ class TestFunctions(unittest.TestCase):
             if 'dualNodeGraph' in data:
                 for target_layer, forbiddens, expected_successor_dict in data['dualNodeGraph']:
                     dual_graph = g.dualNodeGraph(target_layer, forbiddens)
-                    self.assertDictEqual(dual_graph.successors, expected_successor_dict)
+
+                    successor_dict = {}
+                    for k in dual_graph.successors:
+                        if len(dual_graph.successors[k]) != 0:
+                            successor_dict[k] = dual_graph.successors[k]
+
+                    self.assertDictEqual(successor_dict, expected_successor_dict)
 
             if 'checkPathVertexDisjoint' in data:
                 for s1, t1, s2, t2, dual_node_graph, expected in data['checkPathVertexDisjoint']:
@@ -129,11 +167,23 @@ class TestFunctions(unittest.TestCase):
                     result = g.checkPathVertexDisjoint(s1, t1, s2, t2, dual_node_graph)
                     self.assertEqual(result, expected)
 
-                    
-                
-            
+    def test_integration(self):
+        dataset = integrationTestDataset()
+        dirs = BuildDirectory()
+        if not os.path.exists(dirs.build_root):
+            os.mkdir(dirs.build_root)
 
+        for data in dataset:
+            problem = parseInputFile(dirs.testFilePath(data['in']))
+            realizable_graph = problem.solve()
+            writeOutput(dirs.test_temp_output, realizable_graph)
+
+            pairs = parseRealizablePair(dirs.test_temp_output)
+            pairs_expected = parseRealizablePair(dirs.testFilePath(data['expect']))
+
+            self.assertSetEqual(pairs, pairs_expected)
+
+                    
 
 if __name__ == "__main__":
-    script_folder = os.path.abspath(os.path.dirname(__file__))
-    unittest.main()
+    unittest.main(verbosity=2)
