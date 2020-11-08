@@ -59,12 +59,19 @@ class SetOfStatements:
             new_nodes.extend([str(extra_node), str(extra_node)])
         new_nodes.append(str(statement[3]))
 
-        #create new statements
-        self.addStatements(['0', new_nodes[1], '1', new_nodes[0]])
-        for i in range(1, dividing):
-            self.addStatements(['1', new_nodes[2*i], '0', new_nodes[2*i+1]])
-        for i in range(dividing, extra_node_num + 1):
-            self.addStatements(['0', new_nodes[2*i], mark, new_nodes[2*i+1]])
+        # create new statements
+        # one "*" on the left
+        if statement[0] <= 1:
+            for i in range(0, dividing):
+                self.addStatements(['1', new_nodes[2*i], '0', new_nodes[2*i+1]])
+            for i in range(dividing, extra_node_num + 1):
+                self.addStatements(['0', new_nodes[2*i], mark, new_nodes[2*i+1]])
+        else:
+            self.addStatements(['0', new_nodes[1], '1', new_nodes[0]])
+            for i in range(1, dividing):
+                self.addStatements(['1', new_nodes[2*i], '0', new_nodes[2*i+1]])
+            for i in range(dividing, extra_node_num + 1):
+                self.addStatements(['0', new_nodes[2*i], mark, new_nodes[2*i+1]])
         
         self.extend_node_num += extra_node_num
         self.extend_stat_num += extra_node_num + 1
