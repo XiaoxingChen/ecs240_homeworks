@@ -1,0 +1,8 @@
+pt 1 2
+pt 3 4
+pt 2 6
+pt 2 4
+pt 5 6
+pt 7 2
+pt 8 6
+pt 8 4

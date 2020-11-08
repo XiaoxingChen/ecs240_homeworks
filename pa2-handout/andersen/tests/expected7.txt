@@ -1,0 +1,12 @@
+pt 1 7
+pt 1 6
+pt 1 5
+pt 1 4
+pt 2 7
+pt 2 5
+pt 8 1
+pt 9 8
+pt 3 7
+pt 3 6
+pt 3 5
+pt 3 4
