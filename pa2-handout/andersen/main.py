@@ -149,10 +149,7 @@ class SetOfStatements:
         if statement[0] == '0' and statement[2] == '0':
             b, a = statement[1], statement[3]
             for c in pairs[a]:
-                if b not in pairs.keys():
-                    self.addPair(b, c)
-                    return True
-                if c not in pairs[b]:
+                if b not in pairs.keys() or c not in pairs[b]:
                     self.addPair(b, c)
                     return True 
             return False
@@ -168,10 +165,7 @@ class SetOfStatements:
             d, a = statement[1], statement[3]
             for c in pairs[a]:
                 for b in pairs[c]:
-                    if d not in pairs.keys():
-                        self.addPair(d, b)
-                        return True
-                    if b not in pairs[d]:
+                    if d not in pairs.keys() or b not in pairs[d]:
                         self.addPair(d, b)
                         return True
             return False
@@ -187,7 +181,7 @@ class SetOfStatements:
             b, c = statement[1], statement[3]
             for a in pairs[b]:
                 for b in pairs[c]:
-                    if b not in pairs[a]:
+                    if a not in pairs.keys() or b not in pairs[a]:
                         self.addPair(a, b)
                         return True
             return False
