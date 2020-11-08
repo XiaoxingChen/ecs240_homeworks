@@ -134,6 +134,12 @@ class LayeredGraph():
         assert(self.layer(t1) == self.layer(t2))
         target_layer = self.layer(t1)
 
+        if not self.checkConnected(s1, t1):
+            return False
+
+        if not self.checkConnected(s2, t2):
+            return False
+
         if self.layer(s1) > self.layer(s2):
             s1, t1, s2, t2 = s2, t2, s1, t1
         
@@ -348,23 +354,28 @@ class TypedPointToAnalysis():
                 for q1, q2 in combination2(realizable_graph.nodes(l)):
                     if realizable_graph.checkPathVertexDisjoint(p1, q1, p2, q2, dual_node_graph):
                         s_ccp.append((q1, q2))
+                    elif realizable_graph.checkPathVertexDisjoint(p1, q2, p2, q1, dual_node_graph):
+                        s_ccp.append((q2, q1))
+
             # 7. update lamda1_ccp
             ccp_problem = ConcurrentCopyPropagation(v_ccp, c_ccp, s_ccp)
             lamda1_ccp = ccp_problem.solve1ccp()
+
             # 8. update realizable_graph
             for from_node, to_node in lamda1_ccp:
-                # [todo] when to call addNode() ?
                 realizable_graph.addEdge(from_node, to_node)
+
             # 9. update lamda2_ccp
             lamda2_ccp = ccp_problem.solve2ccp()
+
             # 10. initialize forbidden_pair of this layer
             forbidden_pair.clearLayer(l)
+            
             # 11. update forbidden_pair of this layer
             for pair in combination2(lamda1_ccp):
                 if pair not in lamda2_ccp:
                     forbidden_pair.add(l, pair)
 
-        # print(realizable_graph.successors)
         return realizable_graph
     
 

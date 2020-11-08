@@ -60,7 +60,30 @@ def ccpTestData():
     return dataset
 
 def layeredGraphTestData():
-    dataset = [{
+    dataset = [
+        {
+        'readme': 'this is the graph in paper section 2.2, Figure 3.',
+        'node_layer': 
+            [(301, 3), (302, 3),
+             (201, 2), (202, 2),
+             (101, 1), (102, 1),
+             (  1, 0), (  2, 0)],
+        'edge': [
+            (301, 201), (302, 202), 
+            (201, 101), (202, 102), 
+            (101,   1), (102,   1),
+            (301, 202), (302, 201), 
+            (101,   2)],
+        'kGenerationSuccessors':[
+            # node, k, expected
+            (301, 1, set([201, 202])),
+            (301, 2, set([101, 102])),
+            (301, 3, set([  1,   2])),
+            (302, 1, set([201, 202])),
+            (302, 2, set([101, 102])),
+            (302, 3, set([  2]))]
+        },
+        {
         'node_layer': 
             [(301, 3), (302, 3), (303, 3), (304, 3),
              (201, 2), (202, 2), (203, 2), (204, 2),
@@ -91,9 +114,9 @@ def layeredGraphTestData():
             (102, 104): set([(  2,   4)])} )],
         'checkPathVertexDisjoint':
         [
-            (301, 4, 302, 2, None, True),
-            (202, 4, 302, 2, None, True),
-            # (301, 2, 302, 4, None, False) # [todo] failed to pass this case
+            (301, 4, 302, 2, True),
+            (202, 4, 302, 2, True),
+            (301, 2, 302, 4, False)
         ]
         
     }]
@@ -101,9 +124,10 @@ def layeredGraphTestData():
 
 def integrationTestDataset():
     dataset = [
-        {'in': os.path.join('tests', 'p1.txt'),'expect': os.path.join('tests', 'expected1.txt')},
-        {'in': os.path.join('tests', 'p2.txt'),'expect': os.path.join('tests', 'expected2.txt')},
-        {'in': os.path.join('tests', 'p3.txt'),'expect': os.path.join('tests', 'expected3.txt')}
+        {'in': 'p1.txt','expect': 'expected1.txt'},
+        {'in': 'p2.txt','expect': 'expected2.txt'},
+        {'in': 'p3.txt','expect': 'expected3.txt'},
+        {'in': 'p4.txt','expect': 'expected4.txt'},
     ]
     return dataset
 
@@ -111,10 +135,11 @@ class BuildDirectory():
     def __init__(self):
         self.script_folder = os.path.abspath(os.path.dirname(__file__))
         self.build_root = os.path.join(self.script_folder, 'build')
+        self.test_folder = os.path.join(self.script_folder, 'tests')
         self.test_temp_output = os.path.join(self.build_root, 'temp_test.txt')
 
     def testFilePath(self, relative_path):
-        return os.path.join(self.script_folder, relative_path)
+        return os.path.join(self.test_folder, relative_path)
 
 class TestFunctions(unittest.TestCase):
     def test_basic(self):
@@ -162,7 +187,7 @@ class TestFunctions(unittest.TestCase):
                     self.assertDictEqual(successor_dict, expected_successor_dict)
 
             if 'checkPathVertexDisjoint' in data:
-                for s1, t1, s2, t2, dual_node_graph, expected in data['checkPathVertexDisjoint']:
+                for s1, t1, s2, t2, expected in data['checkPathVertexDisjoint']:
                     dual_node_graph = g.dualNodeGraph(0, ForbiddenPair(g.maxLayer()))
                     result = g.checkPathVertexDisjoint(s1, t1, s2, t2, dual_node_graph)
                     self.assertEqual(result, expected)
