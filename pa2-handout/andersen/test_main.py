@@ -7,6 +7,10 @@ test_suites = [
     ["p1.txt", "expected1.txt"],
     ["p2.txt", "expected2.txt"],
     ["p3.txt", "expected3.txt"],
+    # ["p4.txt", "expected4.txt"],
+    ["p5.txt", "expected5.txt"],
+    ["p6.txt", "expected6.txt"],
+    ["p7.txt", "expected7.txt"],
 ]
 
 def runAndersen(filename):
