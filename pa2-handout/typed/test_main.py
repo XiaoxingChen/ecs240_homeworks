@@ -2,7 +2,36 @@ import os
 import sys
 import unittest
 import shutil
+import random
 from main import *
+
+class PointerHub():
+    """
+    For Monte Carlo test
+    """
+    def __init__(self, all_vars):
+        self.point_to = {var: None for var in all_vars}
+
+    def update(self, statement):
+        """
+        return: 
+            2-tuple, if statement updated
+            None, if nullptr
+        """
+        l_order, l_var, r_order, r_var = statement
+        for i in range(l_order):
+            l_var = self.point_to[l_var]
+            if l_var is None:
+                return None
+
+        for i in range(r_order + 1):
+            r_var = self.point_to[r_var]
+            if r_var is None:
+                return None
+
+        self.point_to[l_var] = r_var
+        return (l_var, r_var)
+
 
 def parseRealizablePair(filename):
     """
@@ -14,7 +43,7 @@ def parseRealizablePair(filename):
             line_content = line.split()
             if line_content[0] != 'pt':
                 raise RuntimeError()
-            point_to.add(tuple(line_content[1:3]))
+            point_to.add(tuple([int(v) for v in line_content[1:3]]))
 
     return point_to
 
@@ -128,6 +157,7 @@ def integrationTestDataset():
         {'in': 'p2.txt','expect': 'expected2.txt'},
         {'in': 'p3.txt','expect': 'expected3.txt'},
         {'in': 'p4.txt','expect': 'expected4.txt'},
+        {'in': 'p5.txt'},
     ]
     return dataset
 
@@ -199,6 +229,8 @@ class TestFunctions(unittest.TestCase):
             os.mkdir(dirs.build_root)
 
         for data in dataset:
+            if 'expect' not in data:
+                continue
             problem = parseInputFile(dirs.testFilePath(data['in']))
             realizable_graph = problem.solve()
             writeOutput(dirs.test_temp_output, realizable_graph)
@@ -207,6 +239,33 @@ class TestFunctions(unittest.TestCase):
             pairs_expected = parseRealizablePair(dirs.testFilePath(data['expect']))
 
             self.assertSetEqual(pairs, pairs_expected)
+
+    def test_monte_carlo(self):
+        dataset = integrationTestDataset()
+        dirs = BuildDirectory()
+        for data in dataset:
+            if 'expect' in data:
+                continue
+
+            problem = parseInputFile(dirs.testFilePath(data['in']))
+            realizable_graph = problem.solve()
+            writeOutput(dirs.test_temp_output, realizable_graph)
+            calculated_pairs = parseRealizablePair(dirs.test_temp_output)
+
+            pointer_hub = PointerHub(problem.type_dict.keys())
+
+            raw_statements = list(problem.raw_statements)
+
+            sampled_pairs = set()
+            for _ in range(50000):
+                idx = int(len(raw_statements) * random.random())
+                pair = pointer_hub.update(raw_statements[idx])
+                if pair is None:
+                    continue
+                sampled_pairs.add(pair)
+                self.assertIn(pair, calculated_pairs)
+
+            # self.assertSetEqual(calculated_pairs, sampled_pairs)
 
                     
 
