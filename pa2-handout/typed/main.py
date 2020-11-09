@@ -41,8 +41,9 @@ class LayeredGraph():
 
     def addNode(self, node, layer):
         if hasattr(node, '__getitem__'):
+            assert(len(set(node)) == len(node))
             node = tuple(sorted(node))
-
+            
         self.layer_of_node[node] = layer
 
         if layer not in self.nodes_in_layer:
@@ -59,10 +60,10 @@ class LayeredGraph():
             to_node = tuple(sorted(to_node))
 
         if from_node not in self.layer_of_node:
-            print("node {} not found".format(from_node))
+            raise RuntimeError("from_node {} not found".format(from_node))
         
         if to_node not in self.layer_of_node:
-            print("node {} not found".format(to_node))
+            raise RuntimeError("to_node {} not found".format(to_node))
 
         if from_node not in self.successors:
             self.successors[from_node] = set()
@@ -110,10 +111,15 @@ class LayeredGraph():
 
         for l in range(self.maxLayer(), target_layer, -1):
             for this_node in combination2(self.nodes(l)):
+
+                for next_node in combination2(self.nodes(l-1)):
+                    dual_node_graph.addNode(next_node, l-1)
+
                 for next_node_0 in self.successors[this_node[0]]:
                     for next_node_1 in self.successors[this_node[1]]:
+                        if next_node_0 == next_node_1:
+                            continue
                         next_node = [next_node_0, next_node_1]
-                        dual_node_graph.addNode(next_node, l-1)
 
                         edge_pair = [(this_node[0], next_node_0),(this_node[1], next_node_1)]
                         if forbidden_pair.existsAbove(edge_pair, l):
