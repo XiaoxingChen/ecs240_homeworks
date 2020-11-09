@@ -133,6 +133,9 @@ def integrationTestDataset():
         {'in': 'p3.txt','expect': 'expected3.txt'},
         {'in': 'p4.txt','expect': 'expected4.txt'},
         {'in': 'p5.txt'},
+        {'in': 'p6.txt'},
+        {'in': 'p7.txt'},
+        {'in': 'p8.txt'},
     ]
     return dataset
 
