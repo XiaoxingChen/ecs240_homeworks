@@ -67,8 +67,9 @@ class SetOfStatements:
             for i in range(dividing, extra_node_num + 1):
                 self.addStatements(['0', new_nodes[2*i], mark, new_nodes[2*i+1]])
         else:
-            self.addStatements(['0', new_nodes[1], '1', new_nodes[0]])
-            for i in range(1, dividing):
+            for i in range(0, dividing-1):
+                self.addStatements(['0', new_nodes[2*i+1], '1', new_nodes[2*i]])
+            for i in range(dividing-1, dividing):
                 self.addStatements(['1', new_nodes[2*i], '0', new_nodes[2*i+1]])
             for i in range(dividing, extra_node_num + 1):
                 self.addStatements(['0', new_nodes[2*i], mark, new_nodes[2*i+1]])
