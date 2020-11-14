@@ -15,15 +15,15 @@ def handleAutoComplete():
     else:
         pass
 
+basic_files = ['build.sh', 'main.py', 'run.sh']
 solution_files = {
-    'pa1-handout': ['build.sh', 'main.py', 'run.sh'],
-    'pa2-handout': [ 
-        os.path.join('andersen', 'build.sh'), 
-        os.path.join('andersen', 'main.py'), 
-        os.path.join('andersen', 'run.sh'),
-        os.path.join('typed', 'build.sh'), 
-        os.path.join('typed', 'main.py'), 
-        os.path.join('typed', 'run.sh')]}
+    'pa1-handout': basic_files,
+    'pa2-handout': [os.path.join(folder, filename) \
+        for folder in ['andersen', 'typed'] \
+        for filename in basic_files],
+    'pa3-handout': [os.path.join(folder, filename) \
+        for folder in ['faintvar', 'reachingdef'] \
+        for filename in basic_files]}
 
 class BuildDirectory():
     def __init__(self, target_folder_name):
