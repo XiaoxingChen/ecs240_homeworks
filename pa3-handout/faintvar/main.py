@@ -31,6 +31,7 @@ class BlockHub():
         self.lhs = {i: set() for i in self.all_blocks}
         self.rhs = {i: set() for i in self.all_blocks}
         self.fvin = {i: self.all_vars for i in self.all_blocks}
+        self.rdout = {i: set() for i in self.all_blocks}
 
     def addBlock(self, idx, lhs=set(), rhs=set()):
         self.lhs[idx] = lhs
@@ -67,7 +68,40 @@ class Problem():
     def addBlock(self, i_l_ri_rn):
         self.blocks.addBlock(i_l_ri_rn[0], set(i_l_ri_rn[1:2]), set(i_l_ri_rn[2:]))
 
-    def update(self):
+    def updateReachingDefinition(self):
+        order = postOrder(self.cfg)[::-1]
+        updated = False
+        for idx in order:
+            rdin = set()
+            for pred in self.cfg.predecessors[idx]:
+                rdin.update(self.blocks.rdout[pred])
+
+            if len(self.blocks.lhs[idx]) == 0 or isPrint(list(self.blocks.lhs[idx])[0]):
+                self.blocks.rdout[idx] = rdin
+                # print("i: {}, rdout: {}".format(idx, rdin))
+                continue
+
+            lhs = list(self.blocks.lhs[idx])[0]
+            gen_set = set()
+            kill_set = set()
+
+            # kill_set
+            for block_idx in rdin:
+                if lhs in self.blocks.lhs[block_idx]:
+                    kill_set.add(block_idx)
+
+            # gen_set
+            gen_set.add(idx)
+
+            new_rdout = rdin.difference(kill_set).union(gen_set)
+            # print("i: {}, rdin: {}, kill: {}, gen: {}, rdout: {}".format(idx, rdin, kill_set, gen_set, new_rdout))
+            if new_rdout != self.blocks.rdout[idx]:
+                updated = True
+                self.blocks.rdout[idx] = new_rdout
+
+        return updated
+
+    def updateFaintVariable(self):
         order = postOrder(self.cfg)
         updated = False
         # print(order)
@@ -106,13 +140,18 @@ class Problem():
         return updated
 
 
-    def solve(self):
-        i = 0
-        while self.update():
-            i += 1
-            if i > 20:
-                print('failed!')
+    def solve(self, question=2):
+        fix_point = False
+        for i in range(20):
+            if 1 == question:
+                update = self.updateReachingDefinition()
+            else:
+                update = self.updateFaintVariable()
+            if not update:
+                fix_point = True
                 break
+        if not fix_point:
+            print("failed!")
         return self.blocks
 
 def postOrder(cfg, root=None, visited=None):
@@ -153,10 +192,14 @@ def parseInputFile(filename):
 
     return problem
 
-def writeOutput(filename, fvin_dict):
+def writeOutput(filename, block_hub, question=2):
     output_str = ''
-    for k in fvin_dict:
-        output_str += ' '.join(['fvin', str(k)] + [str(v) for v in sorted(fvin_dict[k])]) + '\n'
+    for k in block_hub.all_blocks:
+        if 1 == question:
+            output_str += ' '.join(['rdout', str(k)] + [str(v) for v in sorted(block_hub.rdout[k])]) + '\n'
+        else:
+            output_str += ' '.join(['fvin', str(k)] + [str(v) for v in sorted(block_hub.fvin[k])]) + '\n'
+
     with open(filename, 'w') as f:
         f.write(output_str)
 
