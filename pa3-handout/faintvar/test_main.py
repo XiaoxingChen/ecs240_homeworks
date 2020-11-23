@@ -18,13 +18,17 @@ class Dirs():
     script_folder = os.path.abspath(os.path.dirname(__file__))
     build_root = os.path.join(script_folder, 'build')
     test_folder = os.path.join(script_folder, 'tests')
+    test_folder_q1 = os.path.join(script_folder, '..', 'reachingdef', 'tests')
     test_temp_output = os.path.join(build_root, 'temp_test.txt')
 
     @staticmethod
-    def testFilePath(relative_path):
-        return os.path.join(Dirs.test_folder, relative_path)
+    def testFilePath(relative_path, question=2):
+        if 1 == question:
+            return os.path.join(Dirs.test_folder_q1, relative_path)
+        else:
+            return os.path.join(Dirs.test_folder, relative_path)
 
-def parseFaintVariables(filename):
+def parseExpectedFile(filename):
     """
     return dict, key: int, val: tuple
     """
@@ -34,7 +38,7 @@ def parseFaintVariables(filename):
             line_content = line.split()
             if line_content[0] == 'c':
                 continue
-            if line_content[0] != 'fvin':
+            if line_content[0] != 'fvin' and line_content[0] != 'rdout':
                 raise RuntimeError()
             faints[int(line_content[1])] = tuple(sorted([int(v) for v in line_content[2:]]))
 
@@ -46,18 +50,21 @@ class TestFaintVarFunctions(unittest.TestCase):
         if not os.path.exists(Dirs.build_root):
             os.mkdir(Dirs.build_root)
 
-        for data in dataset:
-            if 'expect' not in data:
-                continue
-            problem = parseInputFile(Dirs.testFilePath(data['in']))
-            blocks = problem.solve()
-            writeOutput(Dirs.test_temp_output, blocks.fvin)
+        for q_idx in [1,2]:
+            for data in dataset:
+                if 'expect' not in data:
+                    continue
+                if not os.path.isfile(Dirs.testFilePath(data['expect'], q_idx)):
+                    continue
+                problem = parseInputFile(Dirs.testFilePath(data['in'], q_idx))
+                blocks = problem.solve(question=q_idx)
+                writeOutput(Dirs.test_temp_output, blocks, question=q_idx)
 
-            output = parseFaintVariables(Dirs.test_temp_output)
-            output_expected = parseFaintVariables(Dirs.testFilePath(data['expect']))
+                output = parseExpectedFile(Dirs.test_temp_output)
+                output_expected = parseExpectedFile(Dirs.testFilePath(data['expect'], q_idx))
 
-            # print(output, output_expected)
-            self.assertDictEqual(output, output_expected)
+                # print(output, output_expected)
+                self.assertDictEqual(output, output_expected)
 
     def test_post_order(self):
         problem = parseInputFile(Dirs.testFilePath('p2.txt'))
