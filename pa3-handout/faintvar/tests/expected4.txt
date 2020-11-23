@@ -1,0 +1,6 @@
+c manually calculated by Xiaoxing, need verification.
+fvin 1 3
+fvin 2 1 2 3
+fvin 3 2 3
+fvin 4 1
+fvin 5 1 2 3

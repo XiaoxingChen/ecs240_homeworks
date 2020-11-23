@@ -26,10 +26,11 @@ class ControlFlowGraph:
 
 class BlockHub():
     def __init__(self, num_var, num_block):
-        self.lhs = {i: set() for i in range(1, num_block + 1)}
-        self.rhs = {i: set() for i in range(1, num_block + 1)}
-        all_vars = set([i for i in range(1, num_var + 1)])
-        self.fvin = {i: all_vars for i in range(1, num_block + 1)}
+        self.all_blocks = [i for i in range(1, num_block + 1)]
+        self.all_vars = set([i for i in range(1, num_var + 1)])
+        self.lhs = {i: set() for i in self.all_blocks}
+        self.rhs = {i: set() for i in self.all_blocks}
+        self.fvin = {i: self.all_vars for i in self.all_blocks}
 
     def addBlock(self, idx, lhs=set(), rhs=set()):
         self.lhs[idx] = lhs
@@ -54,12 +55,12 @@ class Problem():
         self.num_edge = num_edge
         self.entry_block = entry_block
         self.exit_block = exit_block
-        
+
         self.cfg = ControlFlowGraph(self.num_block, self.entry_block, self.exit_block)
         self.blocks = BlockHub(num_var, num_block)
         self.all_vars = set([i for i in range(1, num_var + 1)])
 
-        
+
     def addEdge(self, from_idx, to_idx):
         self.cfg.addEdge(from_idx, to_idx)
 
@@ -103,7 +104,7 @@ class Problem():
                 self.blocks.fvin[idx] = new_fvin
 
         return updated
-            
+
 
     def solve(self):
         i = 0
@@ -127,7 +128,7 @@ def postOrder(cfg, root=None, visited=None):
             continue
         visited.add(node)
         seq += postOrder(cfg, node, visited)
-        
+
     seq.append(root)
     return seq
 
@@ -163,6 +164,6 @@ if __name__ == "__main__":
     if len(sys.argv) < 3:
         print("please specify input and output!")
         quit()
-    
+
     input_filename, output_filename = [os.path.join(os.path.realpath(p)) for p in sys.argv[1:3]]
     problem = parseInputFile(input_filename)
