@@ -1,7 +1,5 @@
 import sys
-import os
 import copy
-
 class Reaching:
     def __init__(self,file,out_file):
         self.data = [i.replace('\n', '') for i in open(file).readlines()]
@@ -20,12 +18,11 @@ class Reaching:
             if i[0]=='b':
                 start+=1
                 self.B_mes.append(i)
+        for i in self.data[1:]:
             if i[0]=="e":
                 mes=i.split(" ")
-                if int(mes[1])==start:
-                    self.B[start-1]['next'].append(int(mes[2])-1)
-                elif int(mes[2])==start:
-                    self.B[start-1]['next'].append(int(mes[1])-1)
+                start=int(mes[1])
+                self.B[start-1]['next'].append(int(mes[2])-1)
 
     def start(self):
         out=[]
@@ -39,9 +36,10 @@ class Reaching:
                     out[i].append(j)
         v_list=['q' for i in range(int(self.V))]
 
-        c=100
-        while c>0:
-            c=c-1
+        c=len(self.B_mes)
+        while change!=entry:
+            change = copy.deepcopy(entry)
+            
             for i in range(len(self.B_mes)):
                 for j in out[i]:
                     pre=entry[j]
@@ -72,9 +70,6 @@ if __name__ == '__main__':
     if len(sys.argv) < 3:
         sys.exit("The number of arguments is wrong, please try again")
     file, out_file = [os.path.abspath(os.path.realpath(n)) for n in sys.argv[1:3]]
-    # file=sys.argv[1]
-    # out_file=sys.argv[2]
-    # print(sys.argv)
     r=Reaching(file,out_file)
     r.clean_data()
     r.start()
