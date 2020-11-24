@@ -3,9 +3,7 @@ import copy
 import os
 class Reaching:
     def __init__(self,file,out_file):
-        f = open(file)
-        self.data = [i.replace('\n', '') for i in f.readlines()]
-        f.close()
+        self.data = [i.replace('\n', '') for i in open(file).readlines()]
         self.out_file=out_file
     def clean_data(self):
         for i in self.data:
@@ -17,9 +15,10 @@ class Reaching:
         self.B=[{'next':[]} for i in range(int(self.data[0].split(" ")[2]))]
         start=0
         self.B_mes=[]
+        self.m=[]
         for i in self.data[1:]:
             if i[0]=='b':
-                start+=1
+                self.m.append(i.split(" ")[1])
                 self.B_mes.append(i)
         for i in self.data[1:]:
             if i[0]=="e":
@@ -37,7 +36,7 @@ class Reaching:
             for j in range(len(out)):
                 if i in self.B[j]['next']:
                     out[i].append(j)
-        v_list=['q' for i in range(int(self.V))]
+        v_list=[[] for i in range(int(self.V))]
 
         c=len(self.B_mes)
         while change!=entry:
@@ -53,12 +52,13 @@ class Reaching:
                     if mes[2]=='0':
                         pass
                     elif v_list[int(mes[2])-1]!='q':
-                        kill_b=v_list[int(mes[2])-1]
-                        v_list[int(mes[2]) - 1] = i
-                        entry[i][kill_b] = 0
+
+                        for e in v_list[int(mes[2])-1]:
+                            entry[i][e]=0
+                        v_list[int(mes[2]) - 1] .append(i)
                         entry[i][i]=1
                     else:
-                        v_list[int(mes[2])-1]=i
+                        v_list[int(mes[2])-1].append(i)
                         entry[i][i] = 1
 
         data=open(self.out_file,'w')
@@ -66,14 +66,13 @@ class Reaching:
             lista=[]
             for j in range(len(entry[i])):
                 if entry[i][j]==1:
-                    lista.append(j+1)
+                    lista.append(self.m[j])
             text="rdout "+str(i+1)+" "+" ".join([str(q) for q in lista])+"\n"
             data.write(text)
-        data.close()
 if __name__ == '__main__':
     if len(sys.argv) < 3:
         sys.exit("The number of arguments is wrong, please try again")
     file, out_file = [os.path.abspath(os.path.realpath(n)) for n in sys.argv[1:3]]
-    r = Reaching(file, out_file)
+    r=Reaching(file,out_file)
     r.clean_data()
     r.start()
