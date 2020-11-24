@@ -1,7 +1,6 @@
 import sys
 import copy
 import os
-
 class Reaching:
     def __init__(self,file,out_file):
         self.data = [i.replace('\n', '') for i in open(file).readlines()]
@@ -41,7 +40,7 @@ class Reaching:
         c=len(self.B_mes)
         while change!=entry:
             change = copy.deepcopy(entry)
-            
+
             for i in range(len(self.B_mes)):
                 for j in out[i]:
                     pre=entry[j]
@@ -68,7 +67,6 @@ class Reaching:
                     lista.append(j+1)
             text="rdout "+str(i+1)+" "+" ".join([str(q) for q in lista])+"\n"
             data.write(text)
-
 if __name__ == '__main__':
     if len(sys.argv) < 3:
         sys.exit("The number of arguments is wrong, please try again")
