@@ -1,5 +1,6 @@
 import sys
 import copy
+import os
 class Reaching:
     def __init__(self,file,out_file):
         self.data = [i.replace('\n', '') for i in open(file).readlines()]
