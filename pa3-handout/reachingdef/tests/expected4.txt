@@ -1,0 +1,5 @@
+rdout 1 1
+rdout 2 2
+rdout 3 1
+rdout 4 1
+rdout 5 1 2
