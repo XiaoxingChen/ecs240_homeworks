@@ -1,0 +1,20 @@
+rdout 1
+rdout 2 2 3 4 6 8 9 10 11 12 14 15 17 18 20
+rdout 3 3 4 6 8 9 10 11 12 14 17 18 20
+rdout 4 4 12 15 17
+rdout 5 4 5 6 8 9 10 11 12 14 17 18 20
+rdout 6 6 8 9 11 12 18 20
+rdout 7 4 12 15 17
+rdout 8 8 11 18
+rdout 9 9 12
+rdout 10 4 10 12 14 15 17
+rdout 11 11
+rdout 12 12
+rdout 13 12
+rdout 14 10 12 14 15 17
+rdout 15 12 15
+rdout 16 11 16
+rdout 17 4 12 15 17
+rdout 18 18
+rdout 19 6 8 9 11 12 18 20
+rdout 20 20

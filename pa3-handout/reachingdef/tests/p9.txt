@@ -1,0 +1,52 @@
+p 3 16 28 1 2
+e 1 16
+e 1 11
+e 1 12
+e 3 2
+e 4 3
+e 4 14
+e 5 8
+e 5 2
+e 5 13
+e 6 2
+e 6 15
+e 6 7
+e 7 4
+e 8 4
+e 9 4
+e 9 5
+e 10 8
+e 11 9
+e 12 8
+e 13 4
+e 14 3
+e 14 13
+e 15 12
+e 16 5
+e 16 6
+e 16 7
+e 16 9
+e 16 10
+b 1 3 1 3
+b 2 2 1 2
+b 3 0
+b 4
+b 5 0 3
+b 6 2
+b 7 0 1 3
+b 8 2
+b 9 1
+b 10 0 3
+b 11 0
+b 12 3
+b 13 3 3
+b 14
+b 15 1 3
+b 16 3 1
+c cccccccccccccccccccccccccccccccccccccc
+c Current output of main.py, rdout10 has 1 and 16
+c according to the graph above, the only path from 1 to 10 is 1->16->10,
+c However, node1: v3 = v1 + v3, node16: v3 = v1,
+c which means node16 kills the definition in node 1.
+c Therefore, rdout10 should not contain 1.
+c cccccccccccccccccccccccccccccccccccccc
