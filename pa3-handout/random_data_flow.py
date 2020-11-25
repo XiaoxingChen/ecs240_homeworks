@@ -59,13 +59,17 @@ def randomDataFlowAnalysisGraph(num_var, num_block, start_node, exit_node):
     block_hub = randomBlockHubGenerator(num_var, num_block)
     cfg = randomControlFlowGraphGenerator(num_block, start_node, exit_node)
     edges = [(k, v) for k in cfg.successors.keys() for v in cfg.successors[k]]
-    print("p {} {} {} {} {}".format(num_var, num_block, 2 * (num_block - 2), start_node, exit_node))
-    for e in edges:
-        print("e {} {}".format(e[0], e[1]))
-    for idx in block_hub.all_blocks:
-        param_list = ['b', idx] + list(block_hub.lhs[idx]) + list(block_hub.rhs[idx])
-        print(' '.join([str(p) for p in param_list]))
+    with open("input.txt", "w+") as f:
+        # print("p {} {} {} {} {}".format(num_var, num_block, 2 * (num_block - 2), start_node, exit_node))
+        f.write("p {} {} {} {} {}\n".format(num_var, num_block, 2 * (num_block - 2), start_node, exit_node))
+        for e in edges:
+            # print("e {} {}".format(e[0], e[1]))
+            f.write("e {} {}\n".format(e[0], e[1]))
+        for idx in block_hub.all_blocks:
+            param_list = ['b', idx] + list(block_hub.lhs[idx]) + list(block_hub.rhs[idx])
+            # print(' '.join([str(p) for p in param_list]))
+            f.write(' '.join([str(p) for p in param_list])+'\n')
 
 
 if __name__ == "__main__":
-    randomDataFlowAnalysisGraph(60, 200, 1, 200)
+    randomDataFlowAnalysisGraph(10, 30, 1, 30)
