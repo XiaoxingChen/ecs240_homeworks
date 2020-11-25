@@ -3,7 +3,8 @@ import copy
 import os
 class Reaching:
     def __init__(self,file,out_file):
-        self.data = [i.replace('\n', '') for i in open(file).readlines()]
+        with open(file) as f:
+            self.data = [i.replace('\n', '') for i in f.readlines()]
         self.out_file=out_file
     def clean_data(self):
         for i in self.data:
@@ -69,6 +70,8 @@ class Reaching:
                     lista.append(self.m[j])
             text="rdout "+str(i+1)+" "+" ".join([str(q) for q in lista])+"\n"
             data.write(text)
+        data.close()
+
 if __name__ == '__main__':
     if len(sys.argv) < 3:
         sys.exit("The number of arguments is wrong, please try again")
