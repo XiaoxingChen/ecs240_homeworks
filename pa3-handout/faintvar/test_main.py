@@ -10,7 +10,8 @@ def integrationTestDataset():
         {'in': 'p2.txt','expect': 'expected2.txt'},
         {'in': 'p3.txt','expect': 'expected3.txt'},
         {'in': 'p4.txt','expect': 'expected4.txt'},
-        {'in': 'p5.txt','expect': 'expected5.txt'}
+        {'in': 'p5.txt','expect': 'expected5.txt'},
+        {'in': 'p10.txt','expect': 'expected10.txt'}
     ]
     return dataset
 
@@ -27,6 +28,13 @@ class Dirs():
             return os.path.join(Dirs.test_folder_q1, relative_path)
         else:
             return os.path.join(Dirs.test_folder, relative_path)
+
+    @staticmethod
+    def scriptFolder(question=2):
+        if 2 == question:
+            return Dirs.script_folder
+        else:
+            return os.path.join(Dirs.script_folder, '..', 'reachingdef')
 
 def parseExpectedFile(filename):
     """
@@ -50,17 +58,19 @@ class TestFaintVarFunctions(unittest.TestCase):
         if not os.path.exists(Dirs.build_root):
             os.mkdir(Dirs.build_root)
 
-        for q_idx in [1,2]:
+        for q_idx in [2]:
             for data in dataset:
                 if 'expect' not in data:
                     continue
-                if not os.path.isfile(Dirs.testFilePath(data['expect'], q_idx)):
-                    continue
-                problem = parseInputFile(Dirs.testFilePath(data['in'], q_idx))
-                blocks = problem.solve(question=q_idx)
-                writeOutput(Dirs.test_temp_output, blocks, question=q_idx)
+
+                shell_cmd = " ".join(["./run.sh", Dirs.testFilePath(data['in'], q_idx), Dirs.test_temp_output])
+                os.chdir(Dirs.scriptFolder(q_idx))
+                os.system(shell_cmd)
 
                 output = parseExpectedFile(Dirs.test_temp_output)
+
+                if not os.path.isfile(Dirs.testFilePath(data['expect'], q_idx)):
+                    continue
                 output_expected = parseExpectedFile(Dirs.testFilePath(data['expect'], q_idx))
 
                 # print(output, output_expected)

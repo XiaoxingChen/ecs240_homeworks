@@ -210,3 +210,5 @@ if __name__ == "__main__":
 
     input_filename, output_filename = [os.path.join(os.path.realpath(p)) for p in sys.argv[1:3]]
     problem = parseInputFile(input_filename)
+    blocks = problem.solve(question=2)
+    writeOutput(output_filename, blocks, question=2)

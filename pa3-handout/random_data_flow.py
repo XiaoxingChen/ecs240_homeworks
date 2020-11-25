@@ -68,4 +68,4 @@ def randomDataFlowAnalysisGraph(num_var, num_block, start_node, exit_node):
 
 
 if __name__ == "__main__":
-    randomDataFlowAnalysisGraph(6, 10, 1, 10)
+    randomDataFlowAnalysisGraph(60, 200, 1, 200)
