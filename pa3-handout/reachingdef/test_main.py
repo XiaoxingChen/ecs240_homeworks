@@ -7,15 +7,16 @@ from main import *
 
 def integrationTestDataset():
     dataset = [
-        # {'in': 'p1.txt','expect': 'expected1.txt'},
-        # {'in': 'p2.txt','expect': 'expected2.txt'},
-        # {'in': 'p3.txt','expect': 'expected3.txt'},
-        # {'in': 'p4.txt','expect': 'expected4.txt'},
-        # {'in': 'p5.txt','expect': 'expected5.txt'},
-        # {'in': 'p6.txt','expect': 'expected6.txt'},
-        # {'in': 'p7.txt','expect': 'expected7.txt'},
-        # {'in': 'p8.txt','expect': 'expected8.txt'},
+        {'in': 'p1.txt','expect': 'expected1.txt'},
+        {'in': 'p2.txt','expect': 'expected2.txt'},
+        {'in': 'p3.txt','expect': 'expected3.txt'},
+        {'in': 'p4.txt','expect': 'expected4.txt'},
+        {'in': 'p5.txt','expect': 'expected5.txt'},
+        {'in': 'p6.txt','expect': 'expected6.txt'},
+        {'in': 'p7.txt','expect': 'expected7.txt'},
+        {'in': 'p8.txt','expect': 'expected8.txt'},
         {'in': 'p9.txt','expect': 'expected9.txt'},
+        {'in': 'p10.txt','expect': 'expected10.txt'}
     ]
     return dataset
 
@@ -49,7 +50,7 @@ def parseExpectedFile(filename):
 
     return faints
 
-class TestFaintVarFunctions(unittest.TestCase):
+class TestReachingDefinitionFunctions(unittest.TestCase):
     def test_integration(self):
         dataset = integrationTestDataset()
         if not os.path.exists(Dirs.build_root):
@@ -68,9 +69,6 @@ class TestFaintVarFunctions(unittest.TestCase):
 
                 output = parseExpectedFile(Dirs.test_temp_output)
                 output_expected = parseExpectedFile(Dirs.testFilePath(data['expect'], q_idx))
-
-                print(output)
-                print(output_expected)
 
                 self.assertDictEqual(output, output_expected)
 
