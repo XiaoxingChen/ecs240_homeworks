@@ -58,7 +58,7 @@ class TestFaintVarFunctions(unittest.TestCase):
         if not os.path.exists(Dirs.build_root):
             os.mkdir(Dirs.build_root)
 
-        for q_idx in [2]:
+        for q_idx in [1,2]:
             for data in dataset:
                 if 'expect' not in data:
                     continue
