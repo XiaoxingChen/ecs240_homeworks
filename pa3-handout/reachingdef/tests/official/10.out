@@ -1,0 +1,7 @@
+rdout 1 1
+rdout 2 1 2 4 6
+rdout 3 1 3 4 6
+rdout 4 1 3 4 5 6
+rdout 5 1 4 5 6
+rdout 6 1 6
+rdout 7 1 2 4 6

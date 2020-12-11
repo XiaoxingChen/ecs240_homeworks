@@ -1,0 +1,4 @@
+c Boundary condition
+p 5 1 0 1 1
+c bb1: ;
+b 1

@@ -1,0 +1,26 @@
+c Irreducible loop
+p 4 7 10 1 7
+c bb1: v1 = v2;
+b 1 1 2
+e 1 2
+e 1 6
+c bb2: print(v2, v4);
+b 2 0 2 4
+e 2 3
+e 2 5
+e 2 7
+c bb3: v2 = c;
+b 3 2
+e 3 2
+e 3 4
+c bb4: v4 = v1 + v2;
+b 4 4 1 2
+e 4 3
+c bb5: v2 = c;
+b 5 2
+e 5 4
+c bb6: ;
+b 6
+e 6 4
+c bb7: ;
+b 7

@@ -1,0 +1,31 @@
+c Single loop
+p 4 9 11 1 9
+c bb1: v4 = c;
+b 1 4
+e 1 2
+c bb2: print(v4);
+b 2 0 4
+e 2 3
+e 2 9
+c bb3: print(v4);
+b 3 0 4
+e 3 4
+e 3 5
+c bb4: v1 = v2;
+b 4 1 2
+e 4 8
+c bb5: print(v4);
+b 5 0 4
+e 5 6
+e 5 7
+c bb6: v2 = v3;
+b 6 2 3
+e 6 8
+c bb7: v3 = c;
+b 7 3
+e 7 8
+c bb8: v4 = v4;
+b 8 4 4
+e 8 2
+c bb9: print(v1);
+b 9 0 1

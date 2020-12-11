@@ -11,7 +11,18 @@ def integrationTestDataset():
         {'in': 'p3.txt','expect': 'expected3.txt'},
         {'in': 'p4.txt','expect': 'expected4.txt'},
         {'in': 'p5.txt','expect': 'expected5.txt'},
-        {'in': 'p10.txt','expect': 'expected10.txt'}
+        {'in': 'p10.txt','expect': 'expected10.txt'},
+        {'in': os.path.join('official', '1.in'),'expect':os.path.join('official', '1.out')},
+        {'in': os.path.join('official', '2.in'),'expect':os.path.join('official', '2.out')},
+        {'in': os.path.join('official', '3.in'),'expect':os.path.join('official', '3.out')},
+        {'in': os.path.join('official', '4.in'),'expect':os.path.join('official', '4.out')},
+        {'in': os.path.join('official', '5.in'),'expect':os.path.join('official', '5.out')},
+        {'in': os.path.join('official', '6.in'),'expect':os.path.join('official', '6.out')},
+        {'in': os.path.join('official', '7.in'),'expect':os.path.join('official', '7.out')},
+        {'in': os.path.join('official', '8.in'),'expect':os.path.join('official', '8.out')},
+        {'in': os.path.join('official', '9.in'),'expect':os.path.join('official', '9.out')},
+        {'in': os.path.join('official', '10.in'),'expect':os.path.join('official', '10.out')}
+
     ]
     return dataset
 

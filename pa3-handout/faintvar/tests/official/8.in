@@ -1,0 +1,21 @@
+c Multiple loops
+p 3 6 7 1 6
+c bb1: v1 = c;
+b 1 1
+e 1 2
+c bb2: ;
+b 2
+e 2 3
+e 2 4
+c bb3: v2 = v1;
+b 3 2 1
+e 3 2
+c bb4: ;
+b 4
+e 4 5
+e 4 6
+c bb5: v1 = v2;
+b 5 1 2
+e 5 4
+c bb6: print(v1);
+b 6 0 1
